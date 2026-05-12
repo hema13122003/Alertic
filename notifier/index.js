@@ -28,14 +28,14 @@ const CRON_SECRET = process.env.CRON_SECRET        || "alertic_cron_2024";
 const PORT        = process.env.PORT               || 3000;
 
 const PERIOD_TIMES = {
-  1: { start: "09:00", end: "09:50" },
-  2: { start: "09:50", end: "10:40" },
-  3: { start: "10:55", end: "11:45" },
-  4: { start: "11:45", end: "12:35" },
-  5: { start: "13:15", end: "14:05" },
-  6: { start: "14:05", end: "14:55" },
-  7: { start: "15:10", end: "16:00" },
-  8: { start: "16:00", end: "16:50" },
+  'P1': { start: "09:00", end: "09:50" },
+  'P2': { start: "09:50", end: "10:40" },
+  'P3': { start: "10:55", end: "11:45" },
+  'P4': { start: "11:45", end: "12:35" },
+  'P5': { start: "13:15", end: "14:05" },
+  'P6': { start: "14:05", end: "14:55" },
+  'P7': { start: "15:10", end: "16:00" },
+  'P8': { start: "16:00", end: "16:50" },
 };
 const DAYS   = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const toMins = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };

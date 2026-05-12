@@ -192,36 +192,38 @@ const FacultyAddStudent = () => {
            </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-3 lg:gap-4 w-full lg:w-auto">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
            {view === 'list' ? (
              <>
-               <div className="relative w-full sm:w-64 lg:w-72">
+               <div className="relative w-full sm:w-48 lg:w-72">
                   <input 
                     type="text"
-                    placeholder="Search personnel..."
+                    placeholder="Search..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-10 py-2.5 text-xs lg:text-sm font-bold text-slate-800 outline-none focus:border-blue-500 transition-all shadow-inner"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-lg lg:rounded-xl px-8 lg:px-10 py-2 lg:py-2.5 text-xs lg:text-sm font-bold text-slate-800 outline-none focus:border-blue-500 transition-all shadow-inner"
                   />
-                  <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={12} />
+                  <FaSearch className="absolute left-3 lg:left-4 top-1/2 -translate-y-1/2 text-slate-300" size={10} />
                </div>
-               <button onClick={handleDownloadTemplate} className="w-full sm:w-auto px-4 py-3 lg:py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl font-bold text-[10px] lg:text-[11px] uppercase tracking-widest hover:bg-emerald-100 transition-all flex items-center justify-center gap-2">
-                  <FaDownload size={11} /> Template
-               </button>
-               <label className={`w-full sm:w-auto px-4 py-3 lg:py-2.5 rounded-xl font-bold text-[10px] lg:text-[11px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                 importing ? 'bg-slate-100 text-slate-400 pointer-events-none' : 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100'
-               }`}>
-                  {importing ? <FaSpinner className="animate-spin" size={11} /> : <FaFileImport size={11} />}
-                  {importing ? 'Importing...' : 'Import Excel'}
-                  <input ref={importRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleImport} disabled={importing} />
-               </label>
-               <button onClick={() => setView('add')} className="w-full sm:w-auto px-6 py-3 lg:py-2.5 bg-blue-600 text-white rounded-xl font-bold text-[10px] lg:text-[11px] uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2">
-                  <FaUserPlus /> Enroll Personnel
-               </button>
+               <div className="flex gap-2">
+                 <button onClick={handleDownloadTemplate} className="flex-1 sm:flex-none px-3 lg:px-4 py-2 lg:py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg lg:rounded-xl font-bold text-[9px] lg:text-[11px] uppercase tracking-widest hover:bg-emerald-100 transition-all flex items-center justify-center gap-1.5">
+                    <FaDownload size={10} /> <span className="hidden sm:inline">Template</span>
+                 </button>
+                 <label className={`flex-1 sm:flex-none px-3 lg:px-4 py-2 lg:py-2.5 rounded-lg lg:rounded-xl font-bold text-[9px] lg:text-[11px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                   importing ? 'bg-slate-100 text-slate-400 pointer-events-none' : 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100'
+                 }`}>
+                    {importing ? <FaSpinner className="animate-spin" size={10} /> : <FaFileImport size={10} />}
+                    <span className="hidden sm:inline">{importing ? 'Importing...' : 'Import'}</span>
+                    <input ref={importRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleImport} disabled={importing} />
+                 </label>
+                 <button onClick={() => setView('add')} className="flex-1 sm:flex-none px-3 lg:px-6 py-2 lg:py-2.5 bg-blue-600 text-white rounded-lg lg:rounded-xl font-bold text-[9px] lg:text-[11px] uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5">
+                    <FaUserPlus size={10} /> <span className="hidden sm:inline">Add</span>
+                 </button>
+               </div>
              </>
            ) : (
-             <button onClick={() => setView('list')} className="w-full sm:w-auto px-6 py-3 lg:py-2.5 bg-slate-100 text-slate-600 rounded-xl font-bold text-[10px] lg:text-[11px] uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-2">
-                <FaArrowLeft /> View Registry
+             <button onClick={() => setView('list')} className="w-full sm:w-auto px-4 lg:px-6 py-2 lg:py-2.5 bg-slate-100 text-slate-600 rounded-lg lg:rounded-xl font-bold text-[9px] lg:text-[11px] uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-2">
+                <FaArrowLeft size={10} /> <span>Back</span>
              </button>
            )}
         </div>

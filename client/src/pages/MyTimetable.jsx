@@ -7,17 +7,17 @@ import ClockLoader from '../components/ClockLoader';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const GRID = [
-  { id: 1,    type: 'class', label: 'P1',    time: '09:00 – 09:50' },
-  { id: 2,    type: 'class', label: 'P2',    time: '09:50 – 10:40' },
+  { id: 'P1', type: 'class', label: 'P1',    time: '09:00 – 09:50' },
+  { id: 'P2', type: 'class', label: 'P2',    time: '09:50 – 10:40' },
   { id: 'B1', type: 'break', label: 'Break', time: '10:40 – 10:55' },
-  { id: 3,    type: 'class', label: 'P3',    time: '10:55 – 11:45' },
-  { id: 4,    type: 'class', label: 'P4',    time: '11:45 – 12:35' },
+  { id: 'P3', type: 'class', label: 'P3',    time: '10:55 – 11:45' },
+  { id: 'P4', type: 'class', label: 'P4',    time: '11:45 – 12:35' },
   { id: 'L',  type: 'lunch', label: 'Lunch', time: '12:35 – 13:15' },
-  { id: 5,    type: 'class', label: 'P5',    time: '13:15 – 14:05' },
-  { id: 6,    type: 'class', label: 'P6',    time: '14:05 – 14:55' },
+  { id: 'P5', type: 'class', label: 'P5',    time: '13:15 – 14:05' },
+  { id: 'P6', type: 'class', label: 'P6',    time: '14:05 – 14:55' },
   { id: 'B2', type: 'break', label: 'Break', time: '14:55 – 15:10' },
-  { id: 7,    type: 'class', label: 'P7',    time: '15:10 – 16:00' },
-  { id: 8,    type: 'class', label: 'P8',    time: '16:00 – 16:50' },
+  { id: 'P7', type: 'class', label: 'P7',    time: '15:10 – 16:00' },
+  { id: 'P8', type: 'class', label: 'P8',    time: '16:00 – 16:50' },
 ];
 
 // ── Popover ────────────────────────────────────────────────────────────────────
@@ -112,10 +112,10 @@ const Cell = ({ slot, col, day, isToday, nowStr }) => {
           <p className="text-[10px] font-black text-slate-900 leading-tight line-clamp-2 uppercase tracking-tight">
             {slot.subject_name}
           </p>
-          <p className="text-[8px] font-bold text-slate-400 truncate mt-auto pt-1 uppercase">
-            {slot.dept} · Sec {slot.section}
+          <p className="text-[8px] font-bold text-slate-500 truncate mt-1 uppercase">
+            {slot.program || slot.dept} · Sec {slot.section}
           </p>
-          <span className="text-[7px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded mt-1 self-start uppercase leading-none">
+          <span className="text-[7px] font-black text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded mt-1 self-start uppercase leading-none">
             RM {slot.classroom || 'TBA'}
           </span>
         </div>
@@ -133,7 +133,6 @@ const Cell = ({ slot, col, day, isToday, nowStr }) => {
 // ── Main ───────────────────────────────────────────────────────────────────────
 const MyTimetable = () => {
   const [timetable, setTimetable]     = useState({});
-  const [assignments, setAssignments] = useState([]); // groups this faculty is assigned to
   const [loading, setLoading]         = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -146,33 +145,27 @@ const MyTimetable = () => {
   }, []);
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchData = async () => {
       try {
         const user      = JSON.parse(localStorage.getItem('user') || '{}');
         const facultyId = localStorage.getItem('faculty_id') || user.id;
         if (!facultyId) { setLoading(false); return; }
 
-        const data   = await timetableService.getFacultyWeekly(facultyId);
+        const data = await timetableService.getFacultyWeekly(facultyId);
+
         const mapped = {};
         data.forEach(item => {
           const pId = item.period_id ?? item.period;
           mapped[`${item.day}-${pId}`] = item;
         });
         setTimetable(mapped);
-
-        // Extract unique group assignments
-        const groups = [...new Map(data.map(e => [
-          e.group_id,
-          { group_id: e.group_id, dept: e.dept, program: e.program, semester: e.semester, section: e.section }
-        ])).values()];
-        setAssignments(groups);
       } catch {
         toast.error('Failed to load weekly schedule.');
       } finally {
         setLoading(false);
       }
     };
-    fetch();
+    fetchData();
   }, []);
 
   if (loading) return <ClockLoader />;
@@ -181,33 +174,18 @@ const MyTimetable = () => {
     <div className="w-full h-full flex flex-col bg-[#f8fafc] overflow-hidden">
 
       {/* Top bar */}
-      <div className="shrink-0 px-4 lg:px-8 pt-5 pb-4 border-b border-slate-100 bg-white">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-base font-black text-slate-900 uppercase tracking-tight leading-none">
-              My Timetable
-            </h2>
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-              Weekly class assignment schedule
-            </p>
-          </div>
-
-          {/* Assignment Info */}
-          {assignments.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {assignments.map((a, i) => (
-                <div key={i} className="px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-lg">
-                  <p className="text-[9px] font-black text-blue-600 uppercase tracking-wider">
-                    {a.dept} · {a.program} · SEM {a.semester} · SEC {a.section}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
+      <div className="shrink-0 px-4 lg:px-8 pt-5 pb-4 flex items-center justify-between gap-4 border-b border-slate-100 bg-white">
+        <div>
+          <h2 className="text-base font-black text-slate-900 uppercase tracking-tight leading-none">
+            My Timetable
+          </h2>
+          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+            Weekly class assignment schedule
+          </p>
         </div>
 
         {/* Legend */}
-        <div className="hidden sm:flex items-center gap-4 mt-4 pt-4 border-t border-slate-50">
+        <div className="hidden sm:flex items-center gap-4">
           {[
             { color: 'bg-emerald-500', label: 'Live' },
             { color: 'bg-blue-500',    label: 'Upcoming' },

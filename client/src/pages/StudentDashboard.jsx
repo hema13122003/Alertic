@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Dialog, DialogContent } from '@mui/material';
-import { timetableService, studentService } from '../services/firebaseService';
+import { timetableService, studentService, feeService } from '../services/firebaseService';
 import { db } from '../firebase';
 import { doc, onSnapshot, updateDoc, arrayRemove } from 'firebase/firestore';
+import { FaExclamationTriangle } from 'react-icons/fa';
 import { 
   FaClock, 
   FaMapMarkerAlt, 
@@ -34,6 +35,7 @@ const StudentDashboard = () => {
   const [incomingAlert, setIncomingAlert] = useState(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [alertPrefs, setAlertPrefs] = useState({});
+  const [feeWarning, setFeeWarning] = useState(null);
 
   const fetchData = async () => {
     try {
@@ -50,6 +52,19 @@ const StudentDashboard = () => {
       setStudent(data.student);
       setAlertPrefs(data.student.alert_prefs || {});
       if (structure) setGridConfig(structure);
+
+      // Check fee status
+      const fees = await feeService.getAll();
+      const myFee = fees.find(f => f.student_id === sData.id || f.enroll_no === storedUser.enroll_no);
+      if (myFee) {
+        const y1Pending = myFee.year1_status === 'Pending' || myFee.year1_status === 'Partial';
+        const y2Pending = myFee.year2_status === 'Pending' || myFee.year2_status === 'Partial';
+        if (y1Pending || y2Pending) {
+          const totalDue = (y1Pending ? (myFee.year1_remaining || 0) : 0) +
+                           (y2Pending ? (myFee.year2_remaining || 0) : 0);
+          setFeeWarning({ totalDue, year1: y1Pending ? myFee.year1_status : null, year2: y2Pending ? myFee.year2_status : null });
+        }
+      }
     } catch (error) {
       console.error("Dashboard Sync Error:", error);
     } finally {
@@ -189,6 +204,28 @@ const StudentDashboard = () => {
              </div>
           </div>
         </div>
+
+        {/* Fee Warning Banner */}
+        {feeWarning && (
+          <div className="flex items-center gap-4 p-4 bg-amber-50 border border-amber-200 rounded-2xl">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+              <FaExclamationTriangle className="text-amber-600" size={18} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-black text-amber-800 uppercase tracking-tight">
+                Fee Payment Pending
+              </p>
+              <p className="text-[10px] font-bold text-amber-600 mt-0.5">
+                Outstanding: Rs.{feeWarning.totalDue.toLocaleString()}
+                {feeWarning.year1 && ` · Year 1: ${feeWarning.year1}`}
+                {feeWarning.year2 && ` · Year 2: ${feeWarning.year2}`}
+              </p>
+            </div>
+            <span className="text-[9px] font-black text-amber-700 bg-amber-100 border border-amber-200 px-3 py-1.5 rounded-lg uppercase tracking-widest whitespace-nowrap">
+              Pay Now
+            </span>
+          </div>
+        )}
 
         {/* Tactical Mission Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">

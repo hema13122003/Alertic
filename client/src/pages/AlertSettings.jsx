@@ -144,14 +144,14 @@ const AlertSettings = () => {
   if (loading) return <ClockLoader />;
 
   return (
-    <div className="w-full h-full flex flex-col items-center bg-slate-50/50 overflow-y-auto custom-scrollbar p-8">
+    <div className="w-full h-full flex flex-col items-center bg-slate-50/50 overflow-y-auto custom-scrollbar px-4 py-6 sm:p-8">
       <div className="max-w-4xl w-full animate-slide-up pb-12">
         <div className="mb-4 text-center">
             <h2 className="text-xl font-black text-slate-900 tracking-tighter uppercase mb-0.5">Alert <span className="text-blue-600">Protocol</span></h2>
             <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.4em]">Synchronization Parameters</p>
         </div>
 
-        <Card className="rounded-[2.25rem] border border-slate-200 shadow-xl p-8 bg-white relative overflow-hidden">
+        <Card className="rounded-[2.25rem] border border-slate-200 shadow-xl p-4 sm:p-8 bg-white relative overflow-hidden">
           {/* Subtle Background Icon */}
           <FaBell className="absolute -bottom-6 -right-6 text-slate-50 text-[8rem] rotate-12 pointer-events-none" />
           
@@ -166,7 +166,7 @@ const AlertSettings = () => {
                </div>
             </div>
 
-            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 mb-6 flex items-center justify-between">
+            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 mb-6 flex items-center justify-between gap-4">
                <div>
                   <h4 className="text-[14px] font-bold text-slate-800">Master Alert Protocol</h4>
                   <p className="text-[10px] font-medium text-slate-400 uppercase">Enable automatic period countdowns</p>
@@ -186,8 +186,9 @@ const AlertSettings = () => {
                     onChange={(e) => setIntervalValue(Number(e.target.value))}
                     sx={{
                       display: 'grid',
-                      gridTemplateColumns: 'repeat(4, 1fr)',
-                      gap: '12px',
+                      gridTemplateColumns: 'repeat(2, 1fr)',
+                      gap: '8px',
+                      '@media (min-width: 480px)': { gridTemplateColumns: 'repeat(4, 1fr)' },
                     }}
                   >
                     {[5, 10, 15, 30].map((val) => (
@@ -245,7 +246,7 @@ const AlertSettings = () => {
         </Card>
 
         {/* New Multi-Channel Routing Section */}
-        <Card className="rounded-[2.25rem] border border-slate-200 shadow-xl p-8 bg-white relative overflow-hidden mt-6">
+        <Card className="rounded-[2.25rem] border border-slate-200 shadow-xl p-4 sm:p-8 bg-white relative overflow-hidden mt-6">
            <div className="relative z-10">
               <div className="flex items-center gap-3.5 mb-8">
                  <div className="w-11 h-11 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 border border-indigo-100 shadow-sm">
@@ -259,11 +260,11 @@ const AlertSettings = () => {
 
               <div className="space-y-6">
                  {/* Telegram Channel */}
-                 <div className="p-6 bg-slate-50 rounded-[1.5rem] border border-slate-100 transition-all hover:bg-white hover:shadow-md">
+                 <div className="p-4 sm:p-6 bg-slate-50 rounded-[1.5rem] border border-slate-100 transition-all hover:bg-white hover:shadow-md">
                     <div className="flex items-center justify-between mb-4">
-                       <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-[#0088cc]/10 text-[#0088cc] flex items-center justify-center font-bold text-xs">TG</div>
-                          <p className="text-[13px] font-bold text-slate-800">Telegram Bot Gateway</p>
+                       <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-8 h-8 shrink-0 rounded-lg bg-[#0088cc]/10 text-[#0088cc] flex items-center justify-center font-bold text-xs">TG</div>
+                          <p className="text-[13px] font-bold text-slate-800 truncate">Telegram Bot Gateway</p>
                        </div>
                        <button 
                           onClick={() => setTelegramEnabled(!telegramEnabled)}
@@ -298,11 +299,11 @@ const AlertSettings = () => {
                  </div>
 
                  {/* Email Channel */}
-                 <div className="p-6 bg-slate-50 rounded-[1.5rem] border border-slate-100 transition-all hover:bg-white hover:shadow-md">
+                 <div className="p-4 sm:p-6 bg-slate-50 rounded-[1.5rem] border border-slate-100 transition-all hover:bg-white hover:shadow-md">
                     <div className="flex items-center justify-between mb-4">
-                       <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-red-500/10 text-red-600 flex items-center justify-center font-bold text-xs">@</div>
-                          <p className="text-[13px] font-bold text-slate-800">Email SMTP Relay</p>
+                       <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-8 h-8 shrink-0 rounded-lg bg-red-500/10 text-red-600 flex items-center justify-center font-bold text-xs">@</div>
+                          <p className="text-[13px] font-bold text-slate-800 truncate">Email SMTP Relay</p>
                        </div>
                        <button 
                           onClick={() => setEmailEnabled(!emailEnabled)}

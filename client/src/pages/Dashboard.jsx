@@ -75,14 +75,14 @@ const Dashboard = () => {
     <div className="w-full h-full bg-[#f8fafc] p-3 sm:p-6 lg:p-10 overflow-y-auto custom-scrollbar overflow-x-hidden">
       <div className="max-w-7xl mx-auto space-y-10 animate-fade-in pb-12">
         
-        {/* 1. HEADER: Institutional Authority */}
+        {/* 1. HEADER */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <h1 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">
-               Academic <span className="text-blue-600">Commander</span>
+               MCA <span className="text-blue-600">Command</span>
             </h1>
             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.3em] opacity-80">
-               SMVEC Institutional Management Interface
+               Master of Computer Applications — Admin Panel
             </p>
           </div>
           <div className="flex items-center gap-4 bg-white p-2.5 rounded-2xl border border-slate-200/60 shadow-sm pr-6 transition-all hover:shadow-md">
@@ -96,13 +96,13 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* 2. STATS GRID: Real-time Counters */}
+        {/* 2. STATS GRID */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
            {[
-             { label: 'Staff Registry', val: stats.totalFaculty, icon: <FaUsers />, color: 'blue' },
-             { label: 'Student Cadre', val: stats.totalStudents, icon: <FaUserGraduate />, color: 'indigo' },
-             { label: 'Active Protocols', val: stats.activeTimetables, icon: <FaTable />, color: 'emerald' },
-             { label: 'Faculty Active', val: stats.activeFaculty || 0, icon: <FaChartLine />, color: 'orange' },
+             { label: 'MCA Faculty', val: stats.totalFaculty, icon: <FaUsers />, color: 'blue' },
+             { label: 'MCA Students', val: stats.totalStudents, icon: <FaUserGraduate />, color: 'indigo' },
+             { label: 'Timetables', val: stats.activeTimetables, icon: <FaTable />, color: 'emerald' },
+             { label: 'Active Faculty', val: stats.activeFaculty || 0, icon: <FaChartLine />, color: 'orange' },
            ].map((item, i) => (
              <div key={i} className="group bg-white rounded-2xl p-6 border border-slate-200/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
                 <div className={`absolute top-0 right-0 w-24 h-24 bg-${item.color}-500/5 blur-3xl rounded-full -mr-8 -mt-8`}></div>
@@ -131,8 +131,8 @@ const Dashboard = () => {
                    <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20"><FaTable size={16} /></div>
                       <div>
-                         <h3 className="text-[15px] font-black text-slate-900 uppercase tracking-tighter">Institutional Protocol Map</h3>
-                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Department-wise Timetable Coverage</p>
+                         <h3 className="text-[15px] font-black text-slate-900 uppercase tracking-tighter">MCA Timetable Coverage</h3>
+                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Batch-wise Schedule Overview</p>
                       </div>
                    </div>
                    <button onClick={() => navigate('/table-creation')} className="text-[10px] font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100 hover:bg-blue-600 hover:text-white transition-all uppercase tracking-widest">View All</button>
@@ -140,19 +140,19 @@ const Dashboard = () => {
                 
                 <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-4">
                    {[
-                      { dept: 'CSE', full: 'Computer Science', count: 12, color: 'blue' },
-                      { dept: 'IT', full: 'Information Technology', count: 8, color: 'emerald' },
-                      { dept: 'ECE', full: 'Electronics & Comm.', count: 10, color: 'indigo' },
-                      { dept: 'MECH', full: 'Mechanical Eng.', count: 6, color: 'orange' },
+                      { dept: 'MCA I', full: 'First Year — Sem I & II', count: stats.activeTimetables, color: 'blue' },
+                      { dept: 'MCA II', full: 'Second Year — Sem III & IV', count: stats.activeTimetables, color: 'indigo' },
+                      { dept: 'FACULTY', full: 'MCA Teaching Staff', count: stats.totalFaculty, color: 'emerald' },
+                      { dept: 'STUDENTS', full: 'Enrolled MCA Students', count: stats.totalStudents, color: 'orange' },
                    ].map((d, i) => (
                       <div key={i} className="p-5 bg-slate-50/50 rounded-2xl border border-slate-100 group hover:bg-white hover:shadow-lg transition-all">
                          <div className="flex items-center justify-between mb-3">
                             <span className={`text-[10px] font-black px-2 py-0.5 rounded bg-${d.color}-50 text-${d.color}-600 border border-${d.color}-100 uppercase tracking-widest`}>{d.dept}</span>
-                            <span className="text-[10px] font-bold text-slate-400">{d.count} PROTOCOLS</span>
+                            <span className="text-[10px] font-bold text-slate-400">{d.count} RECORDS</span>
                          </div>
                          <h5 className="text-sm font-black text-slate-900 uppercase tracking-tighter mb-4">{d.full}</h5>
                          <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                            <div className={`h-full bg-${d.color}-500`} style={{ width: `${(d.count/15)*100}%` }}></div>
+                            <div className={`h-full bg-${d.color}-500`} style={{ width: `${Math.min((d.count / 20) * 100, 100)}%` }}></div>
                          </div>
                       </div>
                    ))}
@@ -194,13 +194,13 @@ const Dashboard = () => {
            <div className="lg:col-span-4 space-y-6">
               <div className="bg-[#0f172a] rounded-3xl p-8 text-white shadow-2xl shadow-slate-900/20 relative overflow-hidden group">
                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-[60px] rounded-full -mr-16 -mt-16 group-hover:bg-blue-500/20 transition-all duration-700"></div>
-                 <h4 className="text-[11px] font-black text-blue-400 uppercase tracking-[0.3em] mb-6 tracking-widest">Tactical Shortcuts</h4>
+                 <h4 className="text-[11px] font-black text-blue-400 uppercase tracking-[0.3em] mb-6 tracking-widest">Quick Actions</h4>
                  
                  <div className="space-y-4">
                     {[
-                      { label: 'Protocol Architect', path: '/table-creation', icon: <FaTable /> },
-                      { label: 'Staff Registry', path: '/staff', icon: <FaUsers /> },
-                      { label: 'Student Cadre', path: '/students', icon: <FaUserGraduate /> },
+                      { label: 'Manage Timetable', path: '/table-creation', icon: <FaTable /> },
+                      { label: 'MCA Faculty', path: '/staff', icon: <FaUsers /> },
+                      { label: 'MCA Students', path: '/students', icon: <FaUserGraduate /> },
                     ].map((btn, i) => (
                       <button 
                         key={i}
@@ -229,7 +229,7 @@ const Dashboard = () => {
                     </div>
                  </div>
                  <p className="text-[12px] font-medium text-slate-400 leading-relaxed mb-6">
-                    All academic protocols are currently in sync with the central server. Overall institutional deployment efficiency: <span className="text-blue-600 font-bold">98.4%</span>.
+                    All MCA timetables and faculty schedules are synced. Alert system is operational for all batches. Efficiency: <span className="text-blue-600 font-bold">98.4%</span>.
                  </p>
                  <div className="pt-6 border-t border-slate-50 flex items-center justify-between">
                     <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest text-[9px]">Infrastructure Core: STABLE</span>

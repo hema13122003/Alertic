@@ -124,6 +124,8 @@ const TableCreation = () => {
         setConflict({ 
            ...conflictData, 
            cellKey, 
+           day,
+           period_id,
            faculty_name: faculty.name,
            new_faculty_id: faculty_id
         });
@@ -174,13 +176,28 @@ const TableCreation = () => {
     setIsSlotModalOpen(false);
   };
 
-  const resolveConflict = async (override) => {
+  const resolveConflict = (override) => {
     if (override) {
-        setTimetable({ 
-           ...timetable, 
-           [conflict.cellKey]: { ...timetable[conflict.cellKey], faculty_id: conflict.new_faculty_id, faculty_name: conflict.faculty_name }
-        });
-        toast.success("Conflict Resolved: Faculty Overridden.");
+      setTimetable(prev => ({
+        ...prev,
+        [conflict.cellKey]: { 
+          ...prev[conflict.cellKey], 
+          faculty_id: conflict.new_faculty_id, 
+          faculty_name: conflict.faculty_name 
+        }
+      }));
+      toast.success(`Override: ${conflict.faculty_name} assigned.`);
+    } else {
+      // Revert dropdown — clear the pending faculty
+      setTimetable(prev => ({
+        ...prev,
+        [conflict.cellKey]: { 
+          ...prev[conflict.cellKey], 
+          faculty_id: '', 
+          faculty_name: '' 
+        }
+      }));
+      toast.info('Kept original assignment.');
     }
     setIsConflictOpen(false);
     setConflict(null);
@@ -799,7 +816,7 @@ const TableCreation = () => {
             </div>
             <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter mb-2">Faculty Conflict</h3>
             <p className="text-sm text-slate-500 font-bold leading-relaxed mb-8">
-               <span className="text-blue-600">{conflict?.faculty_name}</span> is already assigned to <span className="text-slate-900">{conflict?.group_id}</span> on {conflict?.day} during {conflict?.period_id}.
+               <span className="text-blue-600">{conflict?.faculty_name}</span> is already assigned to <span className="text-slate-900">{conflict?.program} — Sec {conflict?.section}</span> on <span className="text-slate-900">{conflict?.day}</span> during <span className="text-slate-900">{conflict?.period_id}</span>. Assigning here will cause a duplicate slot.
             </p>
             
             <div className="flex flex-col gap-3">

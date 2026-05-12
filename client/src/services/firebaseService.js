@@ -124,23 +124,34 @@ export const timetableService = {
     await batch.commit();
   },
 
-  // 3. Check Faculty Conflict
+  // 3. Check Faculty Conflict — queries timetable_structures entries
   checkConflict: async (facultyId, day, periodId, currentGroupId) => {
-    const q = query(
-      collection(db, "timetable"), 
-      where("faculty_id", "==", facultyId),
-      where("day", "==", day),
-      where("period_id", "==", periodId)
-    );
-    const snapshot = await getDocs(q);
-    let conflict = null;
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      if (data.group_id !== currentGroupId) {
-        conflict = { id: doc.id, ...data };
-      }
-    });
-    return conflict;
+    try {
+      const snap = await getDocs(
+        query(collection(db, "timetable_structures"), where("faculty_ids", "array-contains", facultyId))
+      );
+      let conflict = null;
+      snap.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.group_id === currentGroupId) return;
+        const entry = (data.entries || []).find(
+          e => e.faculty_id === facultyId && e.day === day && e.period_id === periodId
+        );
+        if (entry) {
+          conflict = {
+            group_id: data.group_id,
+            program:  data.program,
+            section:  data.section,
+            semester: data.semester,
+            dept:     data.dept,
+          };
+        }
+      });
+      return conflict;
+    } catch (error) {
+      console.error("Conflict check error:", error);
+      return null;
+    }
   },
 
   // 4. Get Student Dashboard Data

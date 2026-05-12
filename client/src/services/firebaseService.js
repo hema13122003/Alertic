@@ -103,24 +103,45 @@ export const timetableService = {
     await deleteDoc(doc(db, "timetable_structures", groupId));
   },
 
-  // 2. Save Timetable (Optimized for Spark Plan)
   saveTimetable: async (groupId, entries, structure, metadata) => {
+    // ── Server-side duplicate validation before save ──────────────────────────
+    const snap = await getDocs(collection(db, "timetable_structures"));
+    const conflicts = [];
+
+    entries.forEach(entry => {
+      if (!entry.faculty_id) return;
+      snap.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.group_id === groupId) return; // skip current group
+        const dup = (data.entries || []).find(
+          e => e.faculty_id === entry.faculty_id &&
+               e.day       === entry.day &&
+               e.period_id === entry.period_id
+        );
+        if (dup) {
+          conflicts.push(
+            `${entry.faculty_name || entry.faculty_id} → ${entry.day} ${entry.period_id} (already in ${data.group_id})`
+          );
+        }
+      });
+    });
+
+    if (conflicts.length > 0) {
+      throw new Error(`CONFLICT:\n${conflicts.join('\n')}`);
+    }
+
+    // ── No conflicts — proceed to save ───────────────────────────────────────
     const batch = writeBatch(db);
-
-    // Extract all faculty IDs involved for indexing
     const facultyIds = [...new Set(entries.map(e => e.faculty_id).filter(id => id))];
-
-    // Save everything in ONE document
     const structRef = doc(db, "timetable_structures", groupId);
     batch.set(structRef, {
       ...metadata,
       group_id: groupId,
-      structure: structure,
-      entries: entries, // Storing all period data here
-      faculty_ids: facultyIds, // Index for searching
+      structure,
+      entries,
+      faculty_ids: facultyIds,
       updatedAt: serverTimestamp()
     }, { merge: true });
-
     await batch.commit();
   },
 
@@ -130,6 +151,8 @@ export const timetableService = {
       const snap = await getDocs(
         query(collection(db, "timetable_structures"), where("faculty_ids", "array-contains", facultyId))
       );
+      console.log('[conflict] checking:', { facultyId, day, periodId, currentGroupId });
+      console.log('[conflict] docs found:', snap.docs.map(d => ({ id: d.id, entries: d.data().entries?.filter(e => e.faculty_id === facultyId) })));
       let conflict = null;
       snap.forEach(docSnap => {
         const data = docSnap.data();
@@ -147,6 +170,7 @@ export const timetableService = {
           };
         }
       });
+      console.log('[conflict] result:', conflict);
       return conflict;
     } catch (error) {
       console.error("Conflict check error:", error);

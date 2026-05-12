@@ -111,33 +111,41 @@ const TableCreation = () => {
     }
   };
 
+  const getCurrentGroupId = () => {
+    if (selection.group_id) return selection.group_id;
+    const deptCode = DEPT_MAP[selection.dept]?.code || 'MCA';
+    return `${deptCode}-${selection.program}-SEM${selection.semester}-${selection.section}`;
+  };
+
   const handleFacultyChange = async (cellKey, day, period_id, faculty_id) => {
     if (!faculty_id) {
-       setTimetable({ ...timetable, [cellKey]: { ...timetable[cellKey], faculty_id: '', faculty_name: '' }});
-       return;
+      setTimetable(prev => ({ ...prev, [cellKey]: { ...prev[cellKey], faculty_id: '', faculty_name: '' } }));
+      return;
     }
     const faculty = facultyList.find(f => f.id === faculty_id);
+    if (!faculty) return;
+    const currentGroupId = getCurrentGroupId();
     setLoading(true);
     try {
-      const conflictData = await timetableService.checkConflict(faculty_id, day, period_id, selection.group_id);
+      const conflictData = await timetableService.checkConflict(faculty_id, day, period_id, currentGroupId);
       if (conflictData) {
-        setConflict({ 
-           ...conflictData, 
-           cellKey, 
-           day,
-           period_id,
-           faculty_name: faculty.name,
-           new_faculty_id: faculty_id
+        setConflict({
+          ...conflictData,
+          cellKey,
+          day,
+          period_id,
+          faculty_name: faculty.name,
+          new_faculty_id: faculty_id
         });
         setIsConflictOpen(true);
       } else {
-        setTimetable({ 
-           ...timetable, 
-           [cellKey]: { ...timetable[cellKey], faculty_id, faculty_name: faculty.name }
-        });
+        setTimetable(prev => ({
+          ...prev,
+          [cellKey]: { ...prev[cellKey], faculty_id, faculty_name: faculty.name }
+        }));
       }
-    } catch (error) {
-      toast.error("Conflict Processor Error.");
+    } catch {
+      toast.error('Conflict check failed.');
     } finally {
       setLoading(false);
     }
@@ -245,15 +253,13 @@ const TableCreation = () => {
   const saveTimetable = async () => {
     setLoading(true);
     try {
-      const deptCode = DEPT_MAP[selection.dept]?.code || (selection.dept === 'Master of Computer Applications' ? 'MCA' : 'MCA');
-      const gid = selection.group_id || `${deptCode}-${selection.program}-SEM${selection.semester}-${selection.section}`;
+      const gid = getCurrentGroupId();
       const entries = Object.keys(timetable).map(key => {
         const [day, period_id] = key.split('-');
         return {
           ...timetable[key],
           day,
           period_id,
-          // Enrich with class metadata for faculty view
           dept: selection.dept,
           program: selection.program,
           semester: selection.semester,
@@ -264,11 +270,16 @@ const TableCreation = () => {
 
       await timetableService.saveTimetable(gid, entries, gridConfig, selection);
       setOriginalGroupId(gid);
-      toast.success("Timetable Synchronized Successfully.");
+      toast.success("Timetable Saved Successfully.");
       setView('list');
       fetchSystemData();
     } catch (error) {
-      toast.error("Batch Synchronization Failed.");
+      if (error.message?.startsWith('CONFLICT:')) {
+        const lines = error.message.replace('CONFLICT:\n', '').split('\n');
+        lines.forEach(line => toast.error(`⚠️ ${line}`, { autoClose: 6000 }));
+      } else {
+        toast.error("Save Failed.");
+      }
     } finally {
       setLoading(false);
     }

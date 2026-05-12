@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import * as XLSX from 'xlsx';
 import { studentService } from '../services/firebaseService';
 import { db, auth } from '../firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
@@ -11,7 +12,8 @@ import {
 } from '@mui/material';
 import { 
   FaUserPlus, FaTrash, FaSearch, 
-  FaCheckCircle, FaUsers, FaArrowLeft, FaCalendarAlt, FaIdBadge, FaTimes
+  FaCheckCircle, FaUsers, FaArrowLeft, FaCalendarAlt, FaIdBadge, FaTimes,
+  FaDownload, FaFileImport, FaSpinner
 } from 'react-icons/fa';
 
 const DEPT_MAP = {
@@ -26,6 +28,8 @@ const FacultyAddStudent = () => {
   const [students, setStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [view, setView] = useState('list'); // 'list' | 'add'
+  const [importing, setImporting] = useState(false);
+  const importRef = useRef(null);
   
   const [formData, setFormData] = useState({
     name: '', enroll_no: '', email: '', dept: '', program: '',
@@ -60,6 +64,60 @@ const FacultyAddStudent = () => {
       setFormData({ ...formData, [name]: value, program: '' });
     } else {
       setFormData({ ...formData, [name]: value });
+    }
+  };
+
+  const handleDownloadTemplate = () => {
+    const headers = [['name','enroll_no','reg_no','email','password','dept','program','semester','section','academic_year']];
+    const example = [['Arun Kumar','21MCA001','RA2021','arun@college.edu','12345678','Master of Computer Applications','MCA','1','A','2024-2026']];
+    const ws = XLSX.utils.aoa_to_sheet([...headers, ...example]);
+    ws['!cols'] = headers[0].map(() => ({ wch: 22 }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Students');
+    XLSX.writeFile(wb, 'alertic_students_template.xlsx');
+    toast.success('Template downloaded!');
+  };
+
+  const handleImport = async (e) => {
+    const file = e.target.files[0];
+    if (!importRef.current) return;
+    importRef.current.value = '';
+    if (!file) return;
+
+    setImporting(true);
+    try {
+      const data = await file.arrayBuffer();
+      const wb = XLSX.read(data);
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+
+      if (rows.length === 0) return toast.warn('Excel file is empty.');
+
+      let success = 0, failed = 0;
+      for (const row of rows) {
+        try {
+          const deptCode = DEPT_MAP[row.dept]?.code || 'MCA';
+          const group_id = `${deptCode}-${row.program}-SEM${row.semester}-${row.section}`;
+          const password = String(row.password || '12345678');
+          const cred = await createUserWithEmailAndPassword(auth, row.email, password);
+          await setDoc(doc(db, 'students', cred.user.uid), {
+            name: row.name, enroll_no: String(row.enroll_no), reg_no: String(row.reg_no || ''),
+            email: row.email, dept: row.dept, program: row.program,
+            semester: String(row.semester), section: row.section,
+            academic_year: String(row.academic_year), group_id,
+            uid: cred.user.uid, role: 'student', status: 'Active',
+            globalAlertEnabled: false, createdAt: serverTimestamp()
+          });
+          success++;
+        } catch {
+          failed++;
+        }
+      }
+      toast.success(`Imported: ${success} students${failed ? `, ${failed} failed` : ''}`);
+      fetchStudents();
+    } catch {
+      toast.error('Failed to read Excel file.');
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -147,6 +205,16 @@ const FacultyAddStudent = () => {
                   />
                   <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={12} />
                </div>
+               <button onClick={handleDownloadTemplate} className="w-full sm:w-auto px-4 py-3 lg:py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl font-bold text-[10px] lg:text-[11px] uppercase tracking-widest hover:bg-emerald-100 transition-all flex items-center justify-center gap-2">
+                  <FaDownload size={11} /> Template
+               </button>
+               <label className={`w-full sm:w-auto px-4 py-3 lg:py-2.5 rounded-xl font-bold text-[10px] lg:text-[11px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                 importing ? 'bg-slate-100 text-slate-400 pointer-events-none' : 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100'
+               }`}>
+                  {importing ? <FaSpinner className="animate-spin" size={11} /> : <FaFileImport size={11} />}
+                  {importing ? 'Importing...' : 'Import Excel'}
+                  <input ref={importRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleImport} disabled={importing} />
+               </label>
                <button onClick={() => setView('add')} className="w-full sm:w-auto px-6 py-3 lg:py-2.5 bg-blue-600 text-white rounded-xl font-bold text-[10px] lg:text-[11px] uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2">
                   <FaUserPlus /> Enroll Personnel
                </button>

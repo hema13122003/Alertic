@@ -156,14 +156,15 @@ app.post("/trigger", async (req, res) => {
         // ── Send Telegram to faculty ──────────────────────────────────────────
         if (fTgReady) {
           await sendTelegram(fData.telegramId, [
-            "*CLASS ALERT - " + alertInterval + " MIN WARNING*",
+            "🔔 *CLASS ALERT — " + alertInterval + " MIN WARNING*",
             "",
-            "Subject: " + entry.subject_name,
-            "Room: "    + entry.classroom,
-            "Class: "   + data.group_id,
-            "Starts at: " + times.start,
+            "📚 *Subject:* " + entry.subject_name,
+            "🏫 *Room:* "    + entry.classroom,
+            "👥 *Class:* "   + data.group_id,
+            "⏰ *Starts at:* " + times.start,
+            "🕐 *Ends at:* "   + times.end,
             "",
-            "_Alertic - Be on time!_",
+            "_Alertic — Be on time!_",
           ].join("\n"));
         }
 
@@ -216,14 +217,15 @@ app.post("/trigger", async (req, res) => {
           // Send Telegram to student
           if (sTgReady) {
             await sendTelegram(sData.telegramId, [
-              "*CLASS REMINDER - " + stuInterval + " MIN WARNING*",
+              "🎓 *CLASS REMINDER — " + stuInterval + " MIN WARNING*",
               "",
-              "Subject: " + entry.subject_name,
-              "Faculty: " + (fData.name || "Professor"),
-              "Room: "    + entry.classroom,
-              "Starts at: " + times.start,
+              "📚 *Subject:* " + entry.subject_name,
+              "👨‍🏫 *Faculty:* " + (fData.name || "Professor"),
+              "🏫 *Room:* "    + entry.classroom,
+              "⏰ *Starts at:* " + times.start,
+              "🕐 *Ends at:* "   + times.end,
               "",
-              "_Alertic - Don't be late!_",
+              "_Alertic — Don't be late!_",
             ].join("\n"));
           }
 

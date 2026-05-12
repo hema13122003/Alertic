@@ -64,7 +64,7 @@ const FeeManager = () => {
       return row;
     });
 
-    const headers = [['enroll_no','name','semester','category','year1_paid','year2_paid (SEM3+ only)']];
+    const headers = [['enroll_no','name','semester','category','year1_paid','year2_paid']];
     const ws = XLSX.utils.aoa_to_sheet([
       ...headers,
       ...rows.map(r => [r.enroll_no, r.name, r.semester, r.category, r.year1_paid, r.year2_paid ?? ''])

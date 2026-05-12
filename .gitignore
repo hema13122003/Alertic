@@ -1,0 +1,42 @@
+# Dependency management
+node_modules/
+**/node_modules/
+
+# Environment configurations
+.env
+**/.env
+.local.env
+
+# Build outputs
+dist/
+**/dist/
+build/
+**/build/
+out/
+**/out/
+
+# Operational logs
+*.log
+**/logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System overhead
+.DS_Store
+Thumbs.db
+
+# Developer environment metadata
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Tactical data storage
+server/uploads/
+**/temp/
+
+# Sensitive credentials
+**/serviceAccountKey.json
+**/*.key.json
+**/firebase-adminsdk*.json

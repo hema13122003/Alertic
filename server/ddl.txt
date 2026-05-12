@@ -1,0 +1,20 @@
+CREATE TABLE `timetable` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `dept` varchar(100) NOT NULL,
+  `section` varchar(50) NOT NULL,
+  `subject_id` int DEFAULT NULL,
+  `faculty_id` int NOT NULL,
+  `day` enum('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday') NOT NULL,
+  `period` int NOT NULL,
+  `classroom` varchar(100) DEFAULT NULL,
+  `academic_year` varchar(50) DEFAULT NULL,
+  `semester` int DEFAULT NULL,
+  `program` varchar(100) DEFAULT NULL,
+  `subject_name` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_slot` (`dept`,`section`,`semester`,`day`,`period`),
+  KEY `subject_id` (`subject_id`),
+  KEY `faculty_id` (`faculty_id`),
+  CONSTRAINT `timetable_ibfk_1` FOREIGN KEY (`subject_id`) REFERENCES `subjects` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `timetable_ibfk_2` FOREIGN KEY (`faculty_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci

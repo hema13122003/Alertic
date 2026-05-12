@@ -1,0 +1,5 @@
+Testing connection...
+Tables in database: [{"Tables_in_alertic_db":"staff"},{"Tables_in_alertic_db":"students"},{"Tables_in_alertic_db":"users"}]
+Schema for staff: id, name, emp_id, dept, email, phone, role, status
+Schema for students: id, name, enroll_no, reg_no, status
+Schema for users: id, email, phone, emp_id, password, role

@@ -1,0 +1,129 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Poppins', 'Outfit', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  
+  /* Luxury Blue Palette */
+  --color-luxury-blue-50: #f8fafc;
+  --color-luxury-blue-100: #f1f5f9;
+  --color-luxury-blue-200: #e2e8f0;
+  --color-luxury-blue-800: #1e293b;
+  --color-luxury-blue-900: #0f172a;
+  --color-luxury-blue-950: #020617;
+  
+  --color-alertic-blue: var(--color-luxury-blue-900);
+  --color-alertic-yellow: #facc15;
+  --color-alertic-yellow-hover: #eab308;
+}
+
+@layer base {
+  :root {
+    overflow: hidden;
+    font-family: var(--font-sans);
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+    background-color: var(--color-luxury-blue-50);
+    color: var(--color-luxury-blue-900);
+  }
+}
+
+@layer utilities {
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .luxury-gradient {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  }
+  
+  .glass-card {
+    background: rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .input-glass {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+  }
+
+  .input-glass:focus {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #facc15;
+    box-shadow: 0 0 15px rgba(250, 204, 21, 0.3);
+  }
+  
+  .sidebar-glow {
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(15, 23, 42, 0.3);
+    border-radius: 20px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(15, 23, 42, 0.6);
+  }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* For Luxury Dark containers */
+  .sidebar-glow .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+#root {
+  height: 100%;
+  transition: filter 0.3s ease-out;
+}
+
+body.modal-open #root {
+  filter: blur(8px) grayscale(20%);
+  pointer-events: none;
+  user-select: none;
+}

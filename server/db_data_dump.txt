@@ -1,0 +1,32 @@
+Checking database content...
+
+Staff Count: 2
+Staff Records: [
+  {
+    "id": 1,
+    "name": "Empty Check 1",
+    "emp_id": null,
+    "dept": "CS",
+    "email": null,
+    "phone": null,
+    "role": "Staff",
+    "status": "Active"
+  },
+  {
+    "id": 2,
+    "name": "Empty Check 2",
+    "emp_id": null,
+    "dept": "CS",
+    "email": null,
+    "phone": null,
+    "role": "Staff",
+    "status": "Active"
+  }
+]
+
+Student Count: 0
+Student Records: []
+
+User Count: 3
+User Records: [{"id":1,"email":"admin@alertic.com","phone":null,"emp_id":null,"password":"***","role":"admin"},{"id":23,"email":null,"phone":null,"emp_id":null,"password":"***","role":"faculty"},{"id":24,"email":null,"phone":null,"emp_id":null,"password":"***","role":"faculty"}]
+

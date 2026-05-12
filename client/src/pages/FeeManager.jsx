@@ -118,8 +118,8 @@ const FeeManager = () => {
             year1_status:  getStatus(year1_paid, yearlyFee),
             year2_paid,    year2_remaining,
             year2_status:  sem >= 3 ? getStatus(year2_paid, yearlyFee) : 'N/A',
-            telegram_id:   student.telegramId || '',
-            contact_email: student.contactEmail || student.email || '',
+            telegram_id:   student.telegramId || student.telegram_id || '',
+            contact_email: student.contactEmail || student.contact_email || student.email || '',
           };
 
           await feeService.save(student.id, feeRecord);
@@ -137,14 +137,92 @@ const FeeManager = () => {
   const handleSendReminders = async () => {
     setSending(true);
     try {
-      const res = await fetch('https://alertic-notifier.onrender.com/fee-reminder', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-cron-secret': 'alertic_cron_2024' },
-      });
-      const json = await res.json();
-      toast.success(`Reminders sent to ${json.sent} students!`);
-    } catch { toast.error('Failed to send reminders.'); }
-    finally { setSending(false); }
+      const pending = Object.values(feeData).filter(
+        f => f.year1_status === 'Partial' || f.year1_status === 'Pending' ||
+             f.year2_status === 'Partial' || f.year2_status === 'Pending'
+      );
+
+      if (!pending.length) {
+        toast.info('No pending fee students found.');
+        setSending(false);
+        return;
+      }
+
+      let sent = 0;
+      for (const f of pending) {
+        const year1Pending = f.year1_status === 'Partial' || f.year1_status === 'Pending';
+        const year2Pending = f.year2_status === 'Partial' || f.year2_status === 'Pending';
+
+        const year1Info = year1Pending
+          ? `Paid Rs.${(f.year1_paid||0).toLocaleString()} | Remaining Rs.${(f.year1_remaining||0).toLocaleString()} | ${f.year1_status}`
+          : 'N/A';
+        const year2Info = year2Pending
+          ? `Paid Rs.${(f.year2_paid||0).toLocaleString()} | Remaining Rs.${(f.year2_remaining||0).toLocaleString()} | ${f.year2_status}`
+          : 'N/A';
+
+        // Send Email directly from browser
+        if (f.contact_email) {
+          await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              service_id:  'service_npxig3j',
+              template_id: 'template_6qffn9h',
+              user_id:     'Yb3Z9vDtJ9YgtQuRW',
+              template_params: {
+                to_email:   f.contact_email,
+                user_name:  f.name,
+                enroll_no:  f.enroll_no,
+                category:   f.category,
+                year1_info: year1Info,
+                year2_info: year2Info,
+              },
+            }),
+          });
+          sent++;
+        }
+
+        // Send Telegram directly from browser
+        if (f.telegram_id) {
+          const lines = [
+            `*FEE REMINDER - ${f.name}*`,
+            `Enroll: ${f.enroll_no} | ${f.category}`,
+            '',
+          ];
+          if (year1Pending) {
+            lines.push(`Year 1 Fee`);
+            lines.push(`Paid: Rs.${(f.year1_paid||0).toLocaleString()} | Remaining: Rs.${(f.year1_remaining||0).toLocaleString()}`);
+            lines.push(`Status: ${f.year1_status}`);
+            lines.push('');
+          }
+          if (year2Pending) {
+            lines.push(`Year 2 Fee`);
+            lines.push(`Paid: Rs.${(f.year2_paid||0).toLocaleString()} | Remaining: Rs.${(f.year2_remaining||0).toLocaleString()}`);
+            lines.push(`Status: ${f.year2_status}`);
+            lines.push('');
+          }
+          lines.push('_Please clear your pending fees at the earliest._');
+          lines.push('_Alertic - Fee Management System_');
+
+          await fetch(`https://api.telegram.org/bot8679506521:AAF1OeZDhggD6tcYHEA3l-FY-2AM1r2Uyf0/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: f.telegram_id,
+              text: lines.join('\n'),
+              parse_mode: 'Markdown',
+            }),
+          });
+        }
+      }
+
+      toast.success(`Fee reminders sent to ${sent} students!`);
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to send reminders.');
+    } finally {
+      setSending(false);
+    }
   };
 
   // ── Export Defaulters ──────────────────────────────────────────────────────

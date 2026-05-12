@@ -317,8 +317,7 @@ app.post("/webhook", async (req, res) => {
     pendingReg[chatId] = true;
     await sendTelegram(chatId,
       "👋 *Welcome to Alertic!*\n\n" +
-      "Please send your *Enrollment Number* to link your account.\n" +
-      "_Example: 21MCA001_"
+      "Please send your *Enrollment Number* (students) or *Employee ID* (faculty) to link your account."
     );
     return;
   }

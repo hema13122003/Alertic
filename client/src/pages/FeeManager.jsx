@@ -50,26 +50,21 @@ const FeeManager = () => {
 
   // ── Template Download ──────────────────────────────────────────────────────
   const handleDownloadTemplate = () => {
-    const rows = students.map(s => {
+    const headers = ['enroll_no', 'name', 'semester', 'category', 'sem1_paid', 'sem2_paid', 'sem3_paid', 'sem4_paid'];
+    const dataRows = students.map(s => {
       const sem = parseInt(s.semester) || 1;
-      const year1Due = sem >= 1 ? (CATEGORY_FEE[feeData[s.id]?.category] || '') : '';
-      const row = {
-        enroll_no:  s.enroll_no,
-        name:       s.name,
-        semester:   s.semester,
-        category:   feeData[s.id]?.category || '',
-        year1_paid: feeData[s.id]?.year1_paid || 0,
-      };
-      if (sem >= 3) row.year2_paid = feeData[s.id]?.year2_paid || 0;
-      return row;
+      const f   = feeData[s.id] || {};
+      return [
+        s.enroll_no, s.name, s.semester,
+        f.category || '',
+        sem >= 1 ? (f.sem1_paid ?? 0) : '',
+        sem >= 2 ? (f.sem2_paid ?? 0) : '',
+        sem >= 3 ? (f.sem3_paid ?? 0) : '',
+        sem >= 4 ? (f.sem4_paid ?? 0) : '',
+      ];
     });
-
-    const headers = [['enroll_no','name','semester','category','year1_paid','year2_paid']];
-    const ws = XLSX.utils.aoa_to_sheet([
-      ...headers,
-      ...rows.map(r => [r.enroll_no, r.name, r.semester, r.category, r.year1_paid, r.year2_paid ?? ''])
-    ]);
-    ws['!cols'] = [20,25,10,15,15,20].map(w => ({ wch: w }));
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...dataRows]);
+    ws['!cols'] = headers.map(() => ({ wch: 18 }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Fee Structure');
     XLSX.writeFile(wb, 'alertic_fee_template.xlsx');
@@ -98,9 +93,13 @@ const FeeManager = () => {
           const category = row.category || 'Centac';
           const yearlyFee = CATEGORY_FEE[category] || 40000;
 
-          const year1_paid = parseFloat(row.year1_paid) || 0;
-          const year2_paid = sem >= 3 ? (parseFloat(row.year2_paid) || 0) : 0;
+          const sem1_paid = parseFloat(row.sem1_paid) || 0;
+          const sem2_paid = sem >= 2 ? (parseFloat(row.sem2_paid) || 0) : 0;
+          const sem3_paid = sem >= 3 ? (parseFloat(row.sem3_paid) || 0) : 0;
+          const sem4_paid = sem >= 4 ? (parseFloat(row.sem4_paid) || 0) : 0;
 
+          const year1_paid      = sem1_paid + sem2_paid;
+          const year2_paid      = sem3_paid + sem4_paid;
           const year1_remaining = Math.max(yearlyFee - year1_paid, 0);
           const year2_remaining = sem >= 3 ? Math.max(yearlyFee - year2_paid, 0) : 0;
 
@@ -108,18 +107,19 @@ const FeeManager = () => {
             paid >= due ? 'Paid' : paid > 0 ? 'Partial' : 'Pending';
 
           const feeRecord = {
-            student_id:       student.id,
-            enroll_no:        student.enroll_no,
-            name:             student.name,
-            semester:         student.semester,
+            student_id:    student.id,
+            enroll_no:     student.enroll_no,
+            name:          student.name,
+            semester:      student.semester,
             category,
-            yearly_fee:       yearlyFee,
-            year1_paid,       year1_remaining,
-            year1_status:     getStatus(year1_paid, yearlyFee),
-            year2_paid,       year2_remaining,
-            year2_status:     sem >= 3 ? getStatus(year2_paid, yearlyFee) : 'N/A',
-            telegram_id:      student.telegramId || '',
-            contact_email:    student.contactEmail || student.email || '',
+            yearly_fee:    yearlyFee,
+            sem1_paid, sem2_paid, sem3_paid, sem4_paid,
+            year1_paid,    year1_remaining,
+            year1_status:  getStatus(year1_paid, yearlyFee),
+            year2_paid,    year2_remaining,
+            year2_status:  sem >= 3 ? getStatus(year2_paid, yearlyFee) : 'N/A',
+            telegram_id:   student.telegramId || '',
+            contact_email: student.contactEmail || student.email || '',
           };
 
           await feeService.save(student.id, feeRecord);
@@ -233,82 +233,82 @@ const FeeManager = () => {
         ))}
       </div>
 
-      {/* Student Cards */}
-      <div className="flex-1 overflow-y-auto p-4 lg:p-8 custom-scrollbar">
-        {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-slate-300">
-            <FaMoneyBillWave size={48} className="opacity-20 mb-4" />
-            <p className="text-[11px] font-black uppercase tracking-widest opacity-40">No records found</p>
+      {/* Table */}
+      <div className="flex-1 overflow-y-auto p-4 lg:p-6 custom-scrollbar">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse min-w-[800px]">
+              <thead className="bg-slate-50 border-b border-slate-100 sticky top-0">
+                <tr>
+                  <th className="px-4 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">#</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Name</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Enroll No</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Sem</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Category</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Year 1 Paid</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Y1 Rem</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Y1 Status</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Year 2 Paid</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Y2 Rem</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Y2 Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {filtered.length > 0 ? filtered.map((s, idx) => {
+                  const f   = feeData[s.id];
+                  const sem = parseInt(s.semester) || 1;
+                  return (
+                    <tr key={s.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-4 py-3 text-[11px] font-black text-slate-300">{(idx+1).toString().padStart(2,'0')}</td>
+                      <td className="px-4 py-3 text-[12px] font-black text-slate-900 uppercase">{s.name}</td>
+                      <td className="px-4 py-3">
+                        <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">{s.enroll_no}</span>
+                      </td>
+                      <td className="px-4 py-3 text-[11px] font-bold text-slate-700">{s.semester}</td>
+                      <td className="px-4 py-3">
+                        {f?.category ? (
+                          <span className={`text-[9px] font-black px-2 py-1 rounded-lg border uppercase ${
+                            f.category === 'Centac' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-purple-50 text-purple-600 border-purple-100'
+                          }`}>{f.category}</span>
+                        ) : <span className="text-slate-300 text-[10px]">—</span>}
+                      </td>
+                      <td className="px-4 py-3 text-[11px] font-bold text-slate-700">{f ? `₹${(f.year1_paid||0).toLocaleString()}` : '—'}</td>
+                      <td className="px-4 py-3 text-[11px] font-bold text-slate-700">{f ? `₹${(f.year1_remaining||0).toLocaleString()}` : '—'}</td>
+                      <td className="px-4 py-3">
+                        {f?.year1_status ? (
+                          <span className={`text-[9px] font-black px-2 py-1 rounded-full uppercase ${
+                            f.year1_status === 'Paid' ? 'bg-emerald-50 text-emerald-600' :
+                            f.year1_status === 'Partial' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-500'
+                          }`}>{f.year1_status}</span>
+                        ) : <span className="text-slate-300 text-[10px]">—</span>}
+                      </td>
+                      <td className="px-4 py-3 text-[11px] font-bold text-slate-700">
+                        {f && sem >= 3 ? `₹${(f.year2_paid||0).toLocaleString()}` : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-[11px] font-bold text-slate-700">
+                        {f && sem >= 3 ? `₹${(f.year2_remaining||0).toLocaleString()}` : '—'}
+                      </td>
+                      <td className="px-4 py-3">
+                        {f && sem >= 3 && f.year2_status !== 'N/A' ? (
+                          <span className={`text-[9px] font-black px-2 py-1 rounded-full uppercase ${
+                            f.year2_status === 'Paid' ? 'bg-emerald-50 text-emerald-600' :
+                            f.year2_status === 'Partial' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-500'
+                          }`}>{f.year2_status}</span>
+                        ) : <span className="text-slate-300 text-[10px]">—</span>}
+                      </td>
+                    </tr>
+                  );
+                }) : (
+                  <tr>
+                    <td colSpan={11} className="py-16 text-center">
+                      <p className="text-[11px] font-black text-slate-300 uppercase tracking-widest">No records found</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filtered.map(s => {
-              const f = feeData[s.id];
-              const sem = parseInt(s.semester) || 1;
-              return (
-                <div key={s.id} className="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg transition-all">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h4 className="text-sm font-black text-slate-900 uppercase truncate max-w-[160px]">{s.name}</h4>
-                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{s.enroll_no} · SEM {s.semester}</p>
-                    </div>
-                    {f?.category && (
-                      <span className={`text-[8px] font-black px-2 py-1 rounded-lg border uppercase tracking-wider ${f.category === 'Centac' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-purple-50 text-purple-600 border-purple-100'}`}>
-                        {f.category}
-                      </span>
-                    )}
-                  </div>
-
-                  {f ? (
-                    <div className="space-y-3">
-                      {/* Year 1 */}
-                      <div className={`p-3 rounded-xl border ${STATUS_STYLE[f.year1_status]}`}>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-[9px] font-black uppercase tracking-widest">Year 1</span>
-                          <div className="flex items-center gap-1">
-                            {STATUS_ICON[f.year1_status]}
-                            <span className="text-[9px] font-black uppercase">{f.year1_status}</span>
-                          </div>
-                        </div>
-                        <div className="flex justify-between text-[10px] font-bold">
-                          <span>Paid: ₹{f.year1_paid?.toLocaleString()}</span>
-                          <span>Rem: ₹{f.year1_remaining?.toLocaleString()}</span>
-                        </div>
-                        <div className="mt-2 h-1.5 bg-white/60 rounded-full overflow-hidden">
-                          <div className="h-full bg-current opacity-40 rounded-full" style={{ width: `${Math.min((f.year1_paid / f.yearly_fee) * 100, 100)}%` }} />
-                        </div>
-                      </div>
-
-                      {/* Year 2 — only SEM 3+ */}
-                      {sem >= 3 && f.year2_status !== 'N/A' && (
-                        <div className={`p-3 rounded-xl border ${STATUS_STYLE[f.year2_status]}`}>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-[9px] font-black uppercase tracking-widest">Year 2</span>
-                            <div className="flex items-center gap-1">
-                              {STATUS_ICON[f.year2_status]}
-                              <span className="text-[9px] font-black uppercase">{f.year2_status}</span>
-                            </div>
-                          </div>
-                          <div className="flex justify-between text-[10px] font-bold">
-                            <span>Paid: ₹{f.year2_paid?.toLocaleString()}</span>
-                            <span>Rem: ₹{f.year2_remaining?.toLocaleString()}</span>
-                          </div>
-                          <div className="mt-2 h-1.5 bg-white/60 rounded-full overflow-hidden">
-                            <div className="h-full bg-current opacity-40 rounded-full" style={{ width: `${Math.min((f.year2_paid / f.yearly_fee) * 100, 100)}%` }} />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-center">
-                      <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">No fee data</p>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

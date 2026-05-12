@@ -229,34 +229,50 @@ const FacultyAddStudent = () => {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-4 lg:p-8 custom-scrollbar pb-12">
+      <div className="flex-1 overflow-y-auto p-4 lg:p-6 custom-scrollbar pb-12">
         {view === 'list' ? (
-          <div className="max-w-7xl mx-auto space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-               {filteredStudents.length > 0 ? filteredStudents.map((s, idx) => (
-                 <Card key={idx} className="p-5 lg:p-6 rounded-2xl border border-slate-200/60 bg-white hover:shadow-xl transition-all group overflow-hidden relative">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 blur-2xl rounded-full -mr-12 -mt-12"></div>
-                    <div className="flex items-start gap-4 lg:gap-5 relative z-10">
-                       <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-xl lg:rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
-                          <FaIdBadge size={20} className="lg:hidden" />
-                          <FaIdBadge size={24} className="hidden lg:block" />
-                       </div>
-                       <div className="flex-1 min-w-0">
-                          <h4 className="text-sm lg:text-lg font-black text-slate-900 leading-none mb-1 uppercase truncate">{s.name}</h4>
-                          <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">{s.enroll_no}</p>
-                          <div className="flex flex-wrap gap-2">
-                             <span className="text-[8px] lg:text-[9px] font-black bg-blue-50 text-blue-600 px-2 lg:px-2.5 py-0.5 lg:py-1 rounded-md lg:rounded-lg border border-blue-100 uppercase tracking-wider">{s.dept}</span>
-                             <span className="text-[8px] lg:text-[9px] font-black bg-slate-50 text-slate-500 px-2 lg:px-2.5 py-0.5 lg:py-1 rounded-md lg:rounded-lg border border-slate-100 uppercase tracking-wider">Sec {s.section}</span>
-                          </div>
-                       </div>
-                    </div>
-                 </Card>
-               )) : (
-                 <div className="col-span-full py-20 flex flex-col items-center justify-center text-slate-300">
-                    <FaUsers size={48} className="opacity-10 mb-4" />
-                    <p className="text-[11px] font-black uppercase tracking-[0.4em] opacity-30">Registry Empty</p>
-                 </div>
-               )}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse min-w-[600px]">
+                <thead className="bg-slate-50 border-b border-slate-100">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">#</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Name</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Enroll No</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Dept</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Sem</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Section</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {filteredStudents.length > 0 ? filteredStudents.map((s, idx) => (
+                    <tr key={s.id || idx} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-4 py-3 text-[11px] font-black text-slate-300">{(idx+1).toString().padStart(2,'0')}</td>
+                      <td className="px-4 py-3">
+                        <span className="text-[12px] font-black text-slate-900 uppercase">{s.name}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">{s.enroll_no}</span>
+                      </td>
+                      <td className="px-4 py-3 text-[11px] font-bold text-slate-500 uppercase">{s.dept || '—'}</td>
+                      <td className="px-4 py-3 text-[11px] font-bold text-slate-700">{s.semester || '—'}</td>
+                      <td className="px-4 py-3 text-[11px] font-bold text-slate-700">{s.section || '—'}</td>
+                      <td className="px-4 py-3">
+                        <span className={`text-[9px] font-black px-2 py-1 rounded-full uppercase tracking-wider ${
+                          s.status === 'Inactive' ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-600'
+                        }`}>{s.status || 'Active'}</span>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={7} className="py-16 text-center">
+                        <p className="text-[11px] font-black text-slate-300 uppercase tracking-widest">Registry Empty</p>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         ) : (

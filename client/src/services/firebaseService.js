@@ -330,6 +330,19 @@ export const timetableService = {
   },
 };
 
+export const feeService = {
+  getAll: async () => {
+    const snap = await getDocs(collection(db, 'fee_records'));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  },
+  save: async (studentId, record) => {
+    await setDoc(doc(db, 'fee_records', studentId), {
+      ...record,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+  },
+};
+
 export const activityService = {
   getAll: async () => {
     const q = query(collection(db, "activity"), orderBy("timestamp", "desc"));

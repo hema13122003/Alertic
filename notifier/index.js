@@ -251,4 +251,53 @@ app.post("/trigger", async (req, res) => {
   }
 });
 
+// ── Fee Reminder endpoint ────────────────────────────────────────────────────
+app.post("/fee-reminder", async (req, res) => {
+  const secret = req.headers["x-cron-secret"] || req.body?.secret;
+  if (secret !== CRON_SECRET) return res.status(401).json({ error: "Unauthorized" });
+
+  try {
+    const snap = await db.collection("fee_records").get();
+    let sent = 0;
+
+    for (const docSnap of snap.docs) {
+      const f = docSnap.data();
+      const hasYear1Pending = f.year1_status === "Partial" || f.year1_status === "Pending";
+      const hasYear2Pending = f.year2_status === "Partial" || f.year2_status === "Pending";
+      if (!hasYear1Pending && !hasYear2Pending) continue;
+
+      // Build message
+      const lines = [
+        `💸 *FEE REMINDER — ${f.name}*`,
+        `🎓 Enroll: ${f.enroll_no} | ${f.category}`,
+        "",
+      ];
+      if (hasYear1Pending) {
+        lines.push(`📅 *Year 1 Fee*`);
+        lines.push(`Paid: ₹${f.year1_paid?.toLocaleString()} | Remaining: ₹${f.year1_remaining?.toLocaleString()}`);
+        lines.push(`Status: ${f.year1_status}`);
+      }
+      if (hasYear2Pending) {
+        lines.push(`📅 *Year 2 Fee*`);
+        lines.push(`Paid: ₹${f.year2_paid?.toLocaleString()} | Remaining: ₹${f.year2_remaining?.toLocaleString()}`);
+        lines.push(`Status: ${f.year2_status}`);
+      }
+      lines.push("");
+      lines.push("_Please clear your pending fees at the earliest._");
+      lines.push("_Alertic — Fee Management System_");
+
+      const message = lines.join("\n");
+
+      if (f.telegram_id) await sendTelegram(f.telegram_id, message);
+      if (f.contact_email) await sendEmail(f.contact_email, f.name, "Fee Reminder", "", "Pending", "student");
+      sent++;
+    }
+
+    res.json({ success: true, sent });
+  } catch (err) {
+    console.error("Fee reminder error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(PORT, () => console.log("Alertic Notifier running on port " + PORT));

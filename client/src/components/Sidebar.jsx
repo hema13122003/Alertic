@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { FaUsers, FaUserGraduate, FaTable, FaSignOutAlt, FaUserPlus } from 'react-icons/fa';
+import { FaUsers, FaUserGraduate, FaTable, FaSignOutAlt, FaUserPlus, FaMoneyBillWave } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import LogoutModal from './LogoutModal';
 
@@ -22,6 +22,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     { name: 'My Timetable', icon: <FaTable />, path: '/my-timetable', roles: ['faculty'] },
     { name: 'Timetable', icon: <FaTable />, path: '/student-timetable', roles: ['faculty', 'student'] },
     { name: 'Add Student', icon: <FaUserPlus />, path: '/faculty-students', roles: ['faculty'] },
+    { name: 'Fee Manager', icon: <FaMoneyBillWave />, path: '/fee-manager', roles: ['faculty'] },
     { name: 'Alert Settings', icon: <FaUsers />, path: '/alert-settings', roles: ['admin', 'faculty', 'student'] },
     { name: 'Staff Users', icon: <FaUsers />, path: '/staff', roles: ['admin'] },
     { name: 'Student Users', icon: <FaUserGraduate />, path: '/students', roles: ['admin'] },

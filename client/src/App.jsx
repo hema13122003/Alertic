@@ -17,6 +17,7 @@ import AlertSettings from './pages/AlertSettings';
 import StudentTimetable from './pages/StudentTimetable';
 import StudentDashboard from './pages/StudentDashboard';
 import FacultyAddStudent from './pages/FacultyAddStudent';
+import FeeManager from './pages/FeeManager';
 
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
@@ -115,6 +116,14 @@ function App() {
                       element={
                         <ProtectedRoute allowedRoles={['admin', 'faculty']}>
                           <FacultyAddStudent />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/fee-manager" 
+                      element={
+                        <ProtectedRoute allowedRoles={['admin', 'faculty']}>
+                          <FeeManager />
                         </ProtectedRoute>
                       } 
                     />

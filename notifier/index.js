@@ -80,6 +80,34 @@ async function sendEmail(toEmail, userName, subjectName, roomNumber, alertTime, 
   }
 }
 
+async function sendFeeEmail(toEmail, userName, enrollNo, category, year1Info, year2Info) {
+  try {
+    await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        service_id:  "service_npxig3j",
+        template_id: "template_6qffn9h",
+        user_id:     "Yb3Z9vDtJ9YgtQuRW",
+        template_params: {
+          to_email:   toEmail,
+          user_name:  userName,
+          enroll_no:  enrollNo,
+          category:   category,
+          year1_info: year1Info
+            ? `Paid \u20b9${year1Info.paid?.toLocaleString()} | Remaining \u20b9${year1Info.remaining?.toLocaleString()} | ${year1Info.status}`
+            : 'N/A',
+          year2_info: year2Info
+            ? `Paid \u20b9${year2Info.paid?.toLocaleString()} | Remaining \u20b9${year2Info.remaining?.toLocaleString()} | ${year2Info.status}`
+            : 'N/A',
+        },
+      }),
+    });
+  } catch (e) {
+    console.error("Fee email error:", e.message);
+  }
+}
+
 // ── Health check (keeps Render free instance alive via UptimeRobot) ────────────
 app.get("/", (req, res) => res.send("Alertic Notifier OK"));
 
@@ -289,7 +317,14 @@ app.post("/fee-reminder", async (req, res) => {
       const message = lines.join("\n");
 
       if (f.telegram_id) await sendTelegram(f.telegram_id, message);
-      if (f.contact_email) await sendEmail(f.contact_email, f.name, "Fee Reminder", "", "Pending", "student");
+      if (f.contact_email) await sendFeeEmail(
+        f.contact_email,
+        f.name,
+        f.enroll_no,
+        f.category,
+        hasYear1Pending ? { paid: f.year1_paid, remaining: f.year1_remaining, status: f.year1_status } : null,
+        hasYear2Pending ? { paid: f.year2_paid, remaining: f.year2_remaining, status: f.year2_status } : null
+      );
       sent++;
     }
 

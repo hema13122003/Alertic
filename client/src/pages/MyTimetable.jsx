@@ -133,6 +133,7 @@ const Cell = ({ slot, col, day, isToday, nowStr }) => {
 // ── Main ───────────────────────────────────────────────────────────────────────
 const MyTimetable = () => {
   const [timetable, setTimetable]     = useState({});
+  const [assignments, setAssignments] = useState([]); // groups this faculty is assigned to
   const [loading, setLoading]         = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -158,6 +159,13 @@ const MyTimetable = () => {
           mapped[`${item.day}-${pId}`] = item;
         });
         setTimetable(mapped);
+
+        // Extract unique group assignments
+        const groups = [...new Map(data.map(e => [
+          e.group_id,
+          { group_id: e.group_id, dept: e.dept, program: e.program, semester: e.semester, section: e.section }
+        ])).values()];
+        setAssignments(groups);
       } catch {
         toast.error('Failed to load weekly schedule.');
       } finally {
@@ -173,18 +181,33 @@ const MyTimetable = () => {
     <div className="w-full h-full flex flex-col bg-[#f8fafc] overflow-hidden">
 
       {/* Top bar */}
-      <div className="shrink-0 px-4 lg:px-8 pt-5 pb-4 flex items-center justify-between gap-4 border-b border-slate-100 bg-white">
-        <div>
-          <h2 className="text-base font-black text-slate-900 uppercase tracking-tight leading-none">
-            My Timetable
-          </h2>
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-            Weekly class assignment schedule
-          </p>
+      <div className="shrink-0 px-4 lg:px-8 pt-5 pb-4 border-b border-slate-100 bg-white">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-base font-black text-slate-900 uppercase tracking-tight leading-none">
+              My Timetable
+            </h2>
+            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+              Weekly class assignment schedule
+            </p>
+          </div>
+
+          {/* Assignment Info */}
+          {assignments.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {assignments.map((a, i) => (
+                <div key={i} className="px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-lg">
+                  <p className="text-[9px] font-black text-blue-600 uppercase tracking-wider">
+                    {a.dept} · {a.program} · SEM {a.semester} · SEC {a.section}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Legend */}
-        <div className="hidden sm:flex items-center gap-4">
+        <div className="hidden sm:flex items-center gap-4 mt-4 pt-4 border-t border-slate-50">
           {[
             { color: 'bg-emerald-500', label: 'Live' },
             { color: 'bg-blue-500',    label: 'Upcoming' },

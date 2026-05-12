@@ -274,26 +274,35 @@ const AlertSettings = () => {
                        </button>
                     </div>
                     {telegramEnabled && (
-                       <div className="animate-fade-in">
+                       <div className="animate-fade-in space-y-3">
+                          {telegramId ? (
+                            <div className="flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                              <FaCheckCircle className="text-emerald-500 shrink-0" size={14} />
+                              <div>
+                                <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wider">Telegram Linked ✅</p>
+                                <p className="text-[9px] text-emerald-600">Chat ID: {telegramId}</p>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="p-3 bg-[#0088cc]/5 border border-[#0088cc]/20 rounded-xl space-y-2">
+                              <p className="text-[10px] font-black text-[#0088cc] uppercase tracking-wider">How to link Telegram:</p>
+                              <ol className="text-[9px] font-bold text-slate-600 space-y-1 list-decimal list-inside">
+                                <li>Open <span className="text-[#0088cc]">@ProjectAlerticbot</span> on Telegram</li>
+                                <li>Click <span className="font-black">START</span></li>
+                                <li>Send your <span className="font-black">Enrollment Number</span></li>
+                                <li>Bot will auto-link your account ✅</li>
+                              </ol>
+                              <p className="text-[8px] text-slate-400 uppercase tracking-wider">No manual ID entry needed!</p>
+                            </div>
+                          )}
+                          {/* Manual override if needed */}
                           <input 
                              type="text" 
-                             placeholder="Enter Telegram Chat ID"
+                             placeholder="Or enter Chat ID manually"
                              value={telegramId}
                              onChange={(e) => setTelegramId(e.target.value)}
-                             className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold text-slate-700 outline-none focus:border-[#0088cc]"
+                             className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-700 outline-none focus:border-[#0088cc]"
                           />
-                          <div className="flex items-center justify-between mt-2 px-1">
-                             <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Required for mobile alerts</p>
-                             <button 
-                                onClick={() => {
-                                   const helpMsg = "1. Open @ProjectAlerticbot on Telegram\n2. Click START\n3. Search for @getmyid_bot to get your numeric ID\n4. Paste it here!";
-                                   alert(helpMsg);
-                                }}
-                                className="text-[8px] font-black text-[#0088cc] uppercase tracking-tighter hover:underline"
-                             >
-                                How to find my ID?
-                             </button>
-                          </div>
                        </div>
                     )}
                  </div>

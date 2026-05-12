@@ -300,4 +300,99 @@ app.post("/fee-reminder", async (req, res) => {
   }
 });
 
+// ── Telegram Webhook — auto save chat ID ─────────────────────────────────────
+// pending_registrations: { chatId -> timestamp } in-memory (resets on restart, fine for free tier)
+const pendingReg = {};
+
+app.post("/webhook", async (req, res) => {
+  res.sendStatus(200); // always ack Telegram immediately
+  const msg = req.body?.message;
+  if (!msg) return;
+
+  const chatId = msg.chat.id;
+  const text   = (msg.text || "").trim();
+
+  // /start command
+  if (text === "/start") {
+    pendingReg[chatId] = true;
+    await sendTelegram(chatId,
+      "👋 *Welcome to Alertic!*\n\n" +
+      "Please send your *Enrollment Number* to link your account.\n" +
+      "_Example: 21MCA001_"
+    );
+    return;
+  }
+
+  // If user sent enrollment no after /start
+  if (pendingReg[chatId]) {
+    const enrollNo = text.toUpperCase();
+    try {
+      // Search in students
+      const stuSnap = await db.collection("students")
+        .where("enroll_no", "==", enrollNo).get();
+
+      if (!stuSnap.empty) {
+        const stuDoc  = stuSnap.docs[0];
+        await stuDoc.ref.update({
+          telegramId:      String(chatId),
+          telegramEnabled: true,
+        });
+        delete pendingReg[chatId];
+        await sendTelegram(chatId,
+          "✅ *Linked Successfully!*\n\n" +
+          `Hello *${stuDoc.data().name}*!\n` +
+          "You will now receive class alerts and fee reminders on Telegram.\n\n" +
+          "_Alertic — Stay on time!_"
+        );
+        return;
+      }
+
+      // Search in faculties by emp_id
+      const facSnap = await db.collection("faculties")
+        .where("emp_id", "==", enrollNo).get();
+
+      if (!facSnap.empty) {
+        const facDoc = facSnap.docs[0];
+        await facDoc.ref.update({
+          telegramId:      String(chatId),
+          telegramEnabled: true,
+        });
+        delete pendingReg[chatId];
+        await sendTelegram(chatId,
+          "✅ *Linked Successfully!*\n\n" +
+          `Hello *${facDoc.data().name}*!\n` +
+          "You will now receive class alerts on Telegram.\n\n" +
+          "_Alertic — Be on time!_"
+        );
+        return;
+      }
+
+      // Not found
+      await sendTelegram(chatId,
+        "❌ *Enrollment number not found.*\n\n" +
+        "Please check and try again, or contact your administrator."
+      );
+    } catch (e) {
+      console.error("Webhook error:", e.message);
+      await sendTelegram(chatId, "⚠️ Something went wrong. Please try again.");
+    }
+    return;
+  }
+
+  // Default
+  await sendTelegram(chatId,
+    "Send /start to link your Alertic account."
+  );
+});
+
+// ── Register webhook with Telegram ────────────────────────────────────────────
+const RENDER_URL = process.env.RENDER_URL || "https://alertic-notifier.onrender.com";
+fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setWebhook`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ url: `${RENDER_URL}/webhook` }),
+}).then(r => r.json()).then(j => {
+  console.log("Webhook set:", j.ok ? "✅" : j.description);
+}).catch(e => console.error("Webhook setup error:", e.message));
+
 app.listen(PORT, () => console.log("Alertic Notifier running on port " + PORT));

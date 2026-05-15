@@ -216,10 +216,12 @@ app.post("/trigger", async (req, res) => {
         // ── Students in the same group ────────────────────────────────────────
         const stuSnap = await db.collection("students")
           .where("group_id", "==", data.group_id).get();
+        console.log(`[student] group_id=${data.group_id} found=${stuSnap.docs.length}`);
 
         for (const stuDoc of stuSnap.docs) {
           const studentId = stuDoc.id;
           const sData     = stuDoc.data();
+          console.log(`[student] id=${studentId} globalEnabled=${sData.globalAlertEnabled} tgEnabled=${sData.telegramEnabled} tgId=${sData.telegramId}`);
 
           if (sData.globalAlertEnabled !== true) continue;
 

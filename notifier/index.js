@@ -119,9 +119,12 @@ app.post("/trigger", async (req, res) => {
   }
 
   const now        = new Date();
-  const currentDay = DAYS[now.getDay()];
-  const nowMins    = now.getHours() * 60 + now.getMinutes();
-  const todayStr   = now.toISOString().split("T")[0];
+  const istOffset   = 5.5 * 60 * 60 * 1000; // IST = UTC+5:30
+  const istNow      = new Date(now.getTime() + istOffset);
+  const currentDay  = DAYS[istNow.getUTCDay()];
+  const nowMins     = istNow.getUTCHours() * 60 + istNow.getUTCMinutes();
+  const todayStr    = istNow.toISOString().split("T")[0];
+  console.log(`[trigger] IST time=${istNow.toISOString()} day=${currentDay} nowMins=${nowMins}`);
 
   let dispatched = 0;
 

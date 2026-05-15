@@ -216,15 +216,24 @@ const TableCreation = () => {
     let finalSelection = { ...target };
     if (!target.dept && target.group_id) {
        const parts = target.group_id.split('-');
-       // Reverse mapping or partial filling
        finalSelection = {
           ...target,
-          dept: target.dept || parts[0], // Simplified fallback
+          dept: target.dept || parts[0],
           program: target.program || parts[1],
           semester: target.semester || parts[2]?.replace('SEM', ''),
           section: target.section || parts[3],
           academic_year: target.academic_year || '2024-25'
        };
+    }
+    // Resolve advisor_id from name if missing
+    if (!finalSelection.advisor_id && finalSelection.advisor) {
+      const match = facultyList.find(f => f.name === finalSelection.advisor);
+      if (match) finalSelection.advisor_id = match.id;
+    }
+    // Always sync advisor name from current faculty list
+    if (finalSelection.advisor_id) {
+      const match = facultyList.find(f => f.id === finalSelection.advisor_id);
+      if (match) finalSelection.advisor = match.name;
     }
     
     setSelection(finalSelection); 
@@ -385,7 +394,11 @@ const TableCreation = () => {
                     <div className="grid grid-cols-2 gap-3">
                        <div className="p-2.5 bg-slate-50/50 rounded-xl border border-slate-100 flex flex-col items-center justify-center text-center">
                           <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Advisor</p>
-                          <p className="text-[10px] font-bold text-slate-700 truncate w-full">{item.advisor || 'TBD'}</p>
+                          <p className="text-[10px] font-bold text-slate-700 truncate w-full">
+                            {item.advisor_id
+                              ? (facultyList.find(f => f.id === item.advisor_id)?.name || item.advisor || 'TBD')
+                              : (item.advisor || 'TBD')}
+                          </p>
                        </div>
                        <div className="p-2.5 bg-slate-50/50 rounded-xl border border-slate-100 flex flex-col items-center justify-center text-center">
                           <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Room</p>
@@ -447,12 +460,6 @@ const TableCreation = () => {
                  </button>
                )}
                <button 
-                 onClick={() => setIsStructurePanelOpen(!isStructurePanelOpen)}
-                 className={`flex-1 lg:flex-none flex items-center justify-center gap-2 px-3 lg:px-5 py-2 lg:py-2.5 rounded-lg font-bold text-[9px] lg:text-[11px] uppercase tracking-widest transition-all whitespace-nowrap ${isStructurePanelOpen ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-               >
-                 <FaCog size={12} className={isStructurePanelOpen ? 'animate-spin-slow' : ''} /> <span className="hidden sm:inline">Configure Grid</span><span className="sm:hidden">Grid</span>
-               </button>
-               <button 
                  onClick={saveTimetable}
                  className="w-full lg:w-auto flex items-center justify-center gap-2 px-6 lg:px-8 py-2.5 lg:py-3 bg-blue-600 text-white rounded-lg font-bold text-[9px] lg:text-[11px] uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:scale-[1.02] active:scale-95 transition-all whitespace-nowrap"
                >
@@ -462,58 +469,6 @@ const TableCreation = () => {
           </header>
 
           <div className="flex-1 flex overflow-hidden relative">
-            {/* Left Structure Panel (Responsive Drawer) */}
-            <div className={`fixed lg:relative top-0 left-0 lg:top-auto lg:left-auto h-full lg:h-auto z-[100] lg:z-auto transition-all duration-500 bg-white border-r border-slate-200 overflow-hidden flex flex-col shadow-2xl lg:shadow-none ${isStructurePanelOpen ? 'w-80 translate-x-0' : 'w-0 -translate-x-full lg:translate-x-0'}`}>
-              <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between lg:block">
-                 <h4 className="text-[12px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                    <FaCog className="text-blue-600" /> Structure Manager
-                 </h4>
-                 <button onClick={() => setIsStructurePanelOpen(false)} className="lg:hidden text-slate-400"><FaTimes /></button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-                 {gridConfig.map((slot, idx) => (
-                    <div key={slot.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 group relative">
-                       <div className="flex items-center justify-between mb-3">
-                          <span className={`text-[9px] font-black px-2 py-1 rounded-md uppercase ${slot.type === 'class' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
-                             {slot.type === 'class' ? `Period ${slot.label}` : slot.label}
-                          </span>
-                          <button onClick={() => removeSlot(slot.id)} className="text-slate-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100">
-                             <FaTrash size={12} />
-                          </button>
-                       </div>
-                       <div className="space-y-2">
-                          <input 
-                            type="text" 
-                            value={slot.time}
-                            onChange={(e) => updateSlot(slot.id, 'time', e.target.value)}
-                            className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-[11px] font-bold text-slate-700 focus:border-blue-500 outline-none shadow-sm"
-                            placeholder="09:00 – 10:00"
-                          />
-                          {slot.type !== 'class' && (
-                             <select 
-                               value={slot.type}
-                               onChange={(e) => updateSlot(slot.id, 'type', e.target.value)}
-                               className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-[10px] font-bold text-slate-500 focus:border-blue-500 outline-none shadow-sm"
-                             >
-                                <option value="break">Short Break</option>
-                                <option value="lunch">Lunch Break</option>
-                                <option value="custom">Custom Slot</option>
-                             </select>
-                          )}
-                       </div>
-                    </div>
-                 ))}
-                 <div className="pt-4 grid grid-cols-2 gap-3">
-                    <button onClick={addPeriod} className="flex items-center justify-center gap-2 p-3 bg-blue-50 text-blue-600 border border-blue-100 rounded-xl text-[10px] font-bold uppercase hover:bg-blue-600 hover:text-white transition-all">
-                       <FaPlusCircle /> Add Period
-                    </button>
-                    <button onClick={() => addBreak()} className="flex items-center justify-center gap-2 p-3 bg-amber-50 text-amber-600 border border-amber-100 rounded-xl text-[10px] font-bold uppercase hover:bg-amber-600 hover:text-white transition-all">
-                       <FaCoffee /> Add Break
-                    </button>
-                 </div>
-              </div>
-            </div>
-
             {/* Main Timetable Grid */}
             <div className="flex-1 bg-slate-50 overflow-auto p-4 custom-scrollbar">
               <div className="bg-white rounded-xl border border-slate-200 shadow-2xl overflow-x-auto min-w-0">
@@ -733,13 +688,16 @@ const TableCreation = () => {
                  <div className="space-y-1.5 col-span-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Class Advisor</label>
                     <select 
-                      value={selection.advisor || ''}
-                      onChange={(e) => setSelection({...selection, advisor: e.target.value})}
+                      value={selection.advisor_id || ''}
+                      onChange={(e) => {
+                        const f = facultyList.find(f => f.id === e.target.value);
+                        setSelection({...selection, advisor_id: e.target.value, advisor: f?.name || ''});
+                      }}
                       className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 outline-none focus:border-blue-500 appearance-none cursor-pointer"
                     >
                        <option value="">Select Class Advisor</option>
                        {facultyList.map(f => (
-                          <option key={f.id} value={f.name}>{f.name} ({f.dept})</option>
+                          <option key={f.id} value={f.id}>{f.name} ({f.dept})</option>
                        ))}
                     </select>
                  </div>

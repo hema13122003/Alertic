@@ -127,32 +127,35 @@ app.post("/trigger", async (req, res) => {
 
   try {
     const structSnap = await db.collection("timetable_structures").get();
+    console.log(`[trigger] day=${currentDay} nowMins=${nowMins} docs=${structSnap.docs.length}`);
 
     for (const structDoc of structSnap.docs) {
       const data         = structDoc.data();
       const entries      = data.entries || [];
       const todayEntries = entries.filter(e => e.day === currentDay && e.faculty_id);
+      console.log(`[trigger] group=${data.group_id} todayEntries=${todayEntries.length}`);
 
       for (const entry of todayEntries) {
         const periodId        = entry.period_id || entry.period;
         const times           = PERIOD_TIMES[periodId];
-        if (!times) continue;
+        if (!times) { console.log(`[trigger] no times for periodId=${periodId}`); continue; }
 
         const periodStartMins = toMins(times.start);
         const facultyId       = entry.faculty_id;
 
-        // ── Faculty settings ──────────────────────────────────────────────────
         const fSnap = await db.collection("faculties").doc(facultyId).get();
         const fData = fSnap.exists ? fSnap.data() : {};
+        console.log(`[trigger] faculty=${facultyId} globalEnabled=${fData.globalAlertEnabled} tgEnabled=${fData.telegramEnabled} tgId=${fData.telegramId} emailEnabled=${fData.emailEnabled} email=${fData.contactEmail}`);
 
         if (fData.globalAlertEnabled !== true) continue;
 
         const fTgReady    = fData.telegramEnabled === true && fData.telegramId;
         const fEmailReady = fData.emailEnabled    === true && fData.contactEmail;
-        if (!fTgReady && !fEmailReady) continue;
+        if (!fTgReady && !fEmailReady) { console.log(`[trigger] faculty ${facultyId} no channel ready`); continue; }
 
         const alertInterval = fData.alertInterval || 5;
         const triggerMins   = periodStartMins - alertInterval;
+        console.log(`[trigger] periodId=${periodId} periodStartMins=${periodStartMins} triggerMins=${triggerMins} nowMins=${nowMins} match=${nowMins === triggerMins}`);
         if (nowMins !== triggerMins) continue;
 
         // ── Deduplicate ───────────────────────────────────────────────────────

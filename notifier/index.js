@@ -178,7 +178,7 @@ app.post("/trigger", async (req, res) => {
           period_start:  times.start,
           period_end:    times.end,
           faculty_name:  fData.name || "Professor",
-          triggeredAt:   admin.firestore.FieldValue.serverTimestamp(),
+          triggeredAt:   new Date().toISOString(),
         };
 
         // ── Write in-app alert for faculty (browser modal) ────────────────────

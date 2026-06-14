@@ -32,7 +32,7 @@ async function sendTelegram(chatId, text) {
 // ── Send Email via EmailJS (browser) ──────────────────────────────────────────
 async function sendEmail(toEmail, userName, subjectName, roomNumber, alertTime, role) {
   try {
-    await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+    const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -45,6 +45,12 @@ async function sendEmail(toEmail, userName, subjectName, roomNumber, alertTime, 
         },
       }),
     });
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`EmailJS error (status ${response.status}): ${errText}`);
+    } else {
+      console.log(`Email successfully sent to ${toEmail}`);
+    }
   } catch (e) { console.error('Email error:', e.message); }
 }
 
@@ -65,7 +71,7 @@ export async function runAlertCheck(facultyId, weeklySchedule) {
   if (fData.globalAlertEnabled !== true) return;
 
   const fTgReady    = fData.telegramEnabled === true && fData.telegramId;
-  const fEmailReady = fData.emailEnabled    === true && fData.contactEmail;
+  const fEmailReady = fData.emailEnabled    === true && (fData.contactEmail || fData.email);
   if (!fTgReady && !fEmailReady) return;
 
   const alertInterval = fData.alertInterval || 5;
@@ -113,7 +119,7 @@ export async function runAlertCheck(facultyId, weeklySchedule) {
       ].join('\n'));
     }
     if (fEmailReady) {
-      await sendEmail(fData.contactEmail, fData.name || 'Professor',
+      await sendEmail(fData.contactEmail || fData.email, fData.name || 'Professor',
         entry.subject_name, entry.classroom, alertInterval + ' Minutes', 'faculty');
     }
 
@@ -128,7 +134,7 @@ export async function runAlertCheck(facultyId, weeklySchedule) {
 
       if (sData.globalAlertEnabled !== true) continue;
       const sTgReady    = sData.telegramEnabled === true && sData.telegramId;
-      const sEmailReady = sData.emailEnabled    === true && sData.contactEmail;
+      const sEmailReady = sData.emailEnabled    === true && (sData.contactEmail || sData.email);
       if (!sTgReady && !sEmailReady) continue;
 
       const alertPrefs = sData.alert_prefs || {};
@@ -162,7 +168,7 @@ export async function runAlertCheck(facultyId, weeklySchedule) {
         ].join('\n'));
       }
       if (sEmailReady) {
-        await sendEmail(sData.contactEmail, sData.name || 'Student',
+        await sendEmail(sData.contactEmail || sData.email, sData.name || 'Student',
           entry.subject_name, entry.classroom, stuInterval + ' Minutes', 'student');
       }
     }

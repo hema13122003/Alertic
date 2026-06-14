@@ -3,6 +3,7 @@ import { Menu, MenuItem, Box, Typography, Divider, Badge, IconButton } from '@mu
 import { FaBell, FaInfoCircle, FaCalendarCheck, FaBars, FaTimes } from 'react-icons/fa';
 import Sidebar from './Sidebar';
 import AlertBroadcast from './AlertBroadcast';
+import ThemeSwitcher from './ThemeSwitcher';
 
 const DashboardLayout = ({ children }) => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -64,6 +65,8 @@ const DashboardLayout = ({ children }) => {
                   <p className="text-[9px] text-slate-400 uppercase tracking-widest font-bold">System Online</p>
                 </div>
              </div>
+             
+             <ThemeSwitcher />
              
              <button 
                onClick={handleBellClick}

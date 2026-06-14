@@ -58,7 +58,7 @@ async function sendTelegram(chatId, text) {
 // ── Email via EmailJS ──────────────────────────────────────────────────────────
 async function sendEmail(toEmail, userName, subjectName, roomNumber, alertTime, role) {
   try {
-    await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+    const response = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -75,6 +75,12 @@ async function sendEmail(toEmail, userName, subjectName, roomNumber, alertTime, 
         },
       }),
     });
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`EmailJS error (status ${response.status}): ${errText}`);
+    } else {
+      console.log(`Email successfully sent to ${toEmail}`);
+    }
   } catch (e) {
     console.error("Email fetch error:", e.message);
   }
@@ -82,7 +88,7 @@ async function sendEmail(toEmail, userName, subjectName, roomNumber, alertTime, 
 
 async function sendFeeEmail(toEmail, userName, enrollNo, category, year1Info, year2Info) {
   try {
-    await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+    const response = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -103,6 +109,12 @@ async function sendFeeEmail(toEmail, userName, enrollNo, category, year1Info, ye
         },
       }),
     });
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`EmailJS Fee error (status ${response.status}): ${errText}`);
+    } else {
+      console.log(`Fee email successfully sent to ${toEmail}`);
+    }
   } catch (e) {
     console.error("Fee email error:", e.message);
   }
@@ -148,12 +160,12 @@ app.post("/trigger", async (req, res) => {
 
         const fSnap = await db.collection("faculties").doc(facultyId).get();
         const fData = fSnap.exists ? fSnap.data() : {};
-        console.log(`[trigger] faculty=${facultyId} globalEnabled=${fData.globalAlertEnabled} tgEnabled=${fData.telegramEnabled} tgId=${fData.telegramId} emailEnabled=${fData.emailEnabled} email=${fData.contactEmail}`);
+        console.log(`[trigger] faculty=${facultyId} globalEnabled=${fData.globalAlertEnabled} tgEnabled=${fData.telegramEnabled} tgId=${fData.telegramId} emailEnabled=${fData.emailEnabled} email=${fData.contactEmail || fData.email}`);
 
         if (fData.globalAlertEnabled !== true) continue;
 
         const fTgReady    = fData.telegramEnabled === true && fData.telegramId;
-        const fEmailReady = fData.emailEnabled    === true && fData.contactEmail;
+        const fEmailReady = fData.emailEnabled    === true && (fData.contactEmail || fData.email);
         if (!fTgReady && !fEmailReady) { console.log(`[trigger] faculty ${facultyId} no channel ready`); continue; }
 
         const alertInterval = fData.alertInterval || 5;
@@ -205,7 +217,7 @@ app.post("/trigger", async (req, res) => {
         // ── Send Email to faculty ─────────────────────────────────────────────
         if (fEmailReady) {
           await sendEmail(
-            fData.contactEmail, fData.name || "Professor",
+            fData.contactEmail || fData.email, fData.name || "Professor",
             entry.subject_name, entry.classroom,
             alertInterval + " Minutes", "faculty"
           );
@@ -226,7 +238,7 @@ app.post("/trigger", async (req, res) => {
           if (sData.globalAlertEnabled !== true) continue;
 
           const sTgReady    = sData.telegramEnabled === true && sData.telegramId;
-          const sEmailReady = sData.emailEnabled    === true && sData.contactEmail;
+          const sEmailReady = sData.emailEnabled    === true && (sData.contactEmail || sData.email);
           if (!sTgReady && !sEmailReady) continue;
 
           const alertPrefs = sData.alert_prefs || {};
@@ -268,7 +280,7 @@ app.post("/trigger", async (req, res) => {
           // Send Email to student
           if (sEmailReady) {
             await sendEmail(
-              sData.contactEmail, sData.name || "Student",
+              sData.contactEmail || sData.email, sData.name || "Student",
               entry.subject_name, entry.classroom,
               stuInterval + " Minutes", "student"
             );

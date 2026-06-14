@@ -44,7 +44,7 @@ const AlertBroadcast = () => {
                         telegramEnabled: data.telegramEnabled || false,
                         telegramId: data.telegramId || '',
                         emailEnabled: data.emailEnabled || false,
-                        contactEmail: data.contactEmail || ''
+                        contactEmail: data.contactEmail || data.email || ''
                     });
                 }
 
@@ -156,6 +156,13 @@ const AlertBroadcast = () => {
                             user_id: 'Yb3Z9vDtJ9YgtQuRW',
                             template_params: emailParams
                         })
+                    }).then(async res => {
+                        if (!res.ok) {
+                            const errText = await res.text();
+                            console.error(`EmailJS error (status ${res.status}): ${errText}`);
+                        } else {
+                            console.log(`Email successfully sent to ${settings.contactEmail}`);
+                        }
                     }).catch(err => console.error("Email Dispatch Error:", err));
                 }
             }

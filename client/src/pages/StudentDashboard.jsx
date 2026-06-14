@@ -21,9 +21,23 @@ import {
 } from 'react-icons/fa';
 import ClockLoader from '../components/ClockLoader';
 
+const DEFAULT_GRID = [
+  { id: 'P1', type: 'class', label: 'P1', time: '09:00 – 09:50' },
+  { id: 'P2', type: 'class', label: 'P2', time: '09:50 – 10:40' },
+  { id: 'B1', type: 'break', label: 'Break', time: '10:40 – 10:55' },
+  { id: 'P3', type: 'class', label: 'P3', time: '10:55 – 11:45' },
+  { id: 'P4', type: 'class', label: 'P4', time: '11:45 – 12:35' },
+  { id: 'L',  type: 'lunch', label: 'Lunch', time: '12:35 – 13:15' },
+  { id: 'P5', type: 'class', label: 'P5', time: '13:15 – 14:05' },
+  { id: 'P6', type: 'class', label: 'P6', time: '14:05 – 14:55' },
+  { id: 'B2', type: 'break', label: 'Break', time: '14:55 – 15:10' },
+  { id: 'P7', type: 'class', label: 'P7', time: '15:10 – 16:00' },
+  { id: 'P8', type: 'class', label: 'P8', time: '16:00 – 16:50' },
+];
+
 const StudentDashboard = () => {
   const [schedule, setSchedule] = useState([]);
-  const [gridConfig, setGridConfig] = useState([]);
+  const [gridConfig, setGridConfig] = useState(DEFAULT_GRID);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [student, setStudent] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
@@ -51,7 +65,8 @@ const StudentDashboard = () => {
       setSchedule(data.schedule);
       setStudent(data.student);
       setAlertPrefs(data.student.alert_prefs || {});
-      if (structure) setGridConfig(Array.isArray(structure) ? structure : Object.values(structure));
+      if (structure && Array.isArray(structure)) setGridConfig(structure);
+      else setGridConfig(DEFAULT_GRID);
 
       // Check fee status
       const fees = await feeService.getAll();

@@ -51,7 +51,7 @@ const StudentDashboard = () => {
       setSchedule(data.schedule);
       setStudent(data.student);
       setAlertPrefs(data.student.alert_prefs || {});
-      if (structure) setGridConfig(structure);
+      if (structure) setGridConfig(Array.isArray(structure) ? structure : Object.values(structure));
 
       // Check fee status
       const fees = await feeService.getAll();
